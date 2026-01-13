@@ -312,26 +312,23 @@ function App() {
       <div className="relative max-w-4xl mx-auto px-6 sm:px-8 z-10">
         <header className="pt-16 pb-12">
           <div className="flex flex-col items-center gap-6">
-            <div className="flex items-center gap-4 w-full justify-between max-w-2xl">
-              <div className="flex-1" />
+            <div className="relative flex items-center justify-center w-full max-w-2xl">
               <h1 className={`text-3xl sm:text-4xl md:text-5xl font-light text-center transition-colors ${
                 isDarkMode ? 'text-white' : 'text-gray-900'
               }`}>
                 Ulisses Molina-Becerra
               </h1>
-              <div className="flex-1 flex justify-end">
-                <button
-                  onClick={toggleTheme}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                  }`}
-                  aria-label="Toggle theme"
-                >
-                  {isDarkMode ? <FaSun size={20} /> : <FaMoon size={20} />}
-                </button>
-              </div>
+              <button
+                onClick={toggleTheme}
+                className={`absolute right-0 p-2 rounded-lg transition-colors ${
+                  isDarkMode 
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                }`}
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? <FaSun size={20} /> : <FaMoon size={20} />}
+              </button>
             </div>
             <div className="flex gap-4">
               <a href="https://github.com/UlissesMolina" target="_blank" rel="noopener noreferrer" className={`transition-colors duration-200 ${
