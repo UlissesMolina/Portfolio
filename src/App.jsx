@@ -1,8 +1,8 @@
 import './App.css'
-import { FaGithub, FaLinkedin, FaEnvelope, FaJava, FaPython, FaReact, FaHtml5, FaCss3Alt, FaJsSquare } from 'react-icons/fa';
+import { FaGithub, FaLinkedin, FaEnvelope, FaJava, FaPython, FaReact, FaHtml5, FaCss3Alt, FaJsSquare, FaDownload } from 'react-icons/fa';
 import { SiTypescript, SiFirebase, SiJson } from 'react-icons/si';
 import { FaMoon, FaSun } from 'react-icons/fa';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 
 function App() {
   const barRef = useRef(null);
@@ -10,13 +10,11 @@ function App() {
   const mousePositionRef = useRef({ x: 0, y: 0 });
   const animationFrameRef = useRef(null);
   const [selectedExperience, setSelectedExperience] = useState(0);
-  const [contributions, setContributions] = useState([]);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [contributions, setContributions] = useState({});
   const [loading, setLoading] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Check localStorage or default to dark
-    const saved = localStorage.getItem('theme');
-    return saved ? saved === 'dark' : true;
-  });
+  const [githubStats, setGithubStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
   const sectionRefs = useRef([]);
 
   // Optimized mouse tracking for background light effect
@@ -71,182 +69,9 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isDarkMode]);
 
-  // Fetch GitHub contributions
+
+  // Apply theme to document
   useEffect(() => {
-    const fetchContributions = async () => {
-      try {
-        const token = import.meta.env.VITE_GITHUB_TOKEN;
-        const username = 'UlissesMolina';
-        
-        // Try GraphQL API (works with or without token for public data)
-        // Get contributions for exactly 1 year (GitHub API limit)
-        const toDate = new Date();
-        toDate.setHours(23, 59, 59, 999); // End of today
-        const fromDate = new Date();
-        fromDate.setFullYear(fromDate.getFullYear() - 1);
-        fromDate.setHours(0, 0, 0, 0); // Start of day
-        // Don't add buffer - GitHub API requires exactly 1 year or less
-        
-        console.log(`Querying contributions from ${fromDate.toISOString()} to ${toDate.toISOString()}`);
-        
-        const query = `
-          query($username: String!, $from: DateTime!, $to: DateTime!) {
-            user(login: $username) {
-              contributionsCollection(from: $from, to: $to) {
-                contributionCalendar {
-                  totalContributions
-                  weeks {
-                    contributionDays {
-                      date
-                      contributionCount
-                      color
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `;
-
-        // Require token for GraphQL API
-        if (!token) {
-          console.warn('GitHub token not found. Please add VITE_GITHUB_TOKEN to your .env file');
-          // Fall through to use fallback method
-        } else {
-          const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          };
-
-          try {
-            const response = await fetch('https://api.github.com/graphql', {
-              method: 'POST',
-              headers: headers,
-              body: JSON.stringify({
-                query: query,
-                variables: { 
-                  username: username,
-                  from: fromDate.toISOString(),
-                  to: toDate.toISOString()
-                }
-              })
-            });
-
-            if (!response.ok) {
-              throw new Error(`GraphQL API error: ${response.status} ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            
-            if (data.errors) {
-              console.error('GraphQL errors:', data.errors);
-              throw new Error(data.errors[0]?.message || 'GraphQL query failed');
-            }
-            
-            if (data.data && data.data.user && data.data.user.contributionsCollection) {
-              // Process GraphQL response - flatten weeks into days
-              const weeks = data.data.user.contributionsCollection.contributionCalendar.weeks;
-              const contributionsData = [];
-              
-              weeks.forEach(week => {
-                week.contributionDays.forEach(day => {
-                  contributionsData.push({
-                    date: day.date,
-                    count: day.contributionCount
-                  });
-                });
-              });
-
-              console.log(`Loaded ${contributionsData.length} days of contribution data`);
-              console.log(`First date: ${contributionsData[0]?.date}, Last date: ${contributionsData[contributionsData.length - 1]?.date}`);
-              console.log(`Total weeks from API: ${weeks.length}`);
-              
-              setContributions(contributionsData);
-              setLoading(false);
-              return;
-            } else {
-              throw new Error('Invalid GraphQL response structure');
-            }
-          } catch (graphqlError) {
-            console.error('GraphQL API failed:', graphqlError);
-            console.log('Falling back to public events API...');
-            // Fall through to use fallback method
-          }
-        }
-
-        // Fallback: Use public events API (works without token)
-        const response = await fetch(`https://api.github.com/users/${username}/events/public?per_page=300`);
-        if (!response.ok) throw new Error('Failed to fetch');
-        
-        const events = await response.json();
-        
-        // Process events to create contribution data
-        const contributionMap = {};
-        events.forEach(event => {
-          const date = event.created_at.split('T')[0];
-          contributionMap[date] = (contributionMap[date] || 0) + 1;
-        });
-
-        // Generate data from 1 year ago to today, organized by weeks starting Sunday
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const oneYearAgo = new Date(today);
-        oneYearAgo.setFullYear(today.getFullYear() - 1);
-        
-        // Find the Sunday of the week containing oneYearAgo
-        const startDate = new Date(oneYearAgo);
-        const dayOfWeek = startDate.getDay();
-        startDate.setDate(startDate.getDate() - dayOfWeek);
-        startDate.setHours(0, 0, 0, 0);
-        
-        const contributionsData = [];
-        const currentDate = new Date(startDate);
-        
-        // Generate all days from start date to today
-        while (currentDate <= today) {
-          const dateStr = currentDate.toISOString().split('T')[0];
-          const count = contributionMap[dateStr] || 0;
-          contributionsData.push({
-            date: dateStr,
-            count: count
-          });
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-
-        setContributions(contributionsData);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching contributions:', error);
-        // Fallback: generate empty calendar from 1 year ago to today
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const oneYearAgo = new Date(today);
-        oneYearAgo.setFullYear(today.getFullYear() - 1);
-        
-        const startDate = new Date(oneYearAgo);
-        const dayOfWeek = startDate.getDay();
-        startDate.setDate(startDate.getDate() - dayOfWeek);
-        startDate.setHours(0, 0, 0, 0);
-        
-        const emptyData = [];
-        const currentDate = new Date(startDate);
-        
-        while (currentDate <= today) {
-          emptyData.push({ date: currentDate.toISOString().split('T')[0], count: 0 });
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        
-        setContributions(emptyData);
-        setLoading(false);
-      }
-    };
-
-    fetchContributions();
-  }, []);
-
-  // Update theme in localStorage and apply to document
-  useEffect(() => {
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
 
@@ -266,7 +91,7 @@ function App() {
       });
     }, observerOptions);
 
-    // Observe all sections
+    // Observe all sections (now includes 6 sections: About, Experience, Tech Stack, Projects, GitHub Stats, Contributions)
     sectionRefs.current.forEach(ref => {
       if (ref) observer.observe(ref);
     });
@@ -275,12 +100,312 @@ function App() {
       sectionRefs.current.forEach(ref => {
         if (ref) observer.unobserve(ref);
       });
+      observer.disconnect();
     };
   }, []);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
+
+  // Smooth scroll to section
+  const scrollToSection = (index) => {
+    const section = sectionRefs.current[index];
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Fetch GitHub stats
+  useEffect(() => {
+    const fetchGitHubStats = async () => {
+      setLoadingStats(true);
+      try {
+        const username = 'UlissesMolina';
+        const token = import.meta.env.VITE_GITHUB_TOKEN;
+        
+        const headers = token ? {
+          'Authorization': `Bearer ${token}`,
+        } : {};
+
+        // Fetch user info
+        const userResponse = await fetch(`https://api.github.com/users/${username}`, { headers });
+        const userData = await userResponse.json();
+
+        // Fetch repos
+        const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, { headers });
+        const reposData = await reposResponse.json();
+
+        // Calculate stats
+        const totalStars = reposData.reduce((sum, repo) => sum + repo.stargazers_count, 0);
+        const totalForks = reposData.reduce((sum, repo) => sum + repo.forks_count, 0);
+        const publicRepos = reposData.length;
+        const totalCommits = userData.public_repos; // Approximate
+
+        setGithubStats({
+          followers: userData.followers || 0,
+          following: userData.following || 0,
+          publicRepos,
+          totalStars,
+          totalForks,
+        });
+      } catch (error) {
+        console.error('Error fetching GitHub stats:', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchGitHubStats();
+  }, []);
+
+  // Fetch GitHub contributions - uses GraphQL API for private repos if token available
+  useEffect(() => {
+    const fetchContributions = async () => {
+      setLoading(true);
+      try {
+        const username = 'UlissesMolina';
+        const token = import.meta.env.VITE_GITHUB_TOKEN;
+        const contributionData = {};
+        
+        const today = new Date();
+        const oneYearAgo = new Date(today);
+        oneYearAgo.setFullYear(today.getFullYear() - 1);
+        oneYearAgo.setHours(0, 0, 0, 0);
+
+        // Try GraphQL API first (includes private repos if token is provided)
+        if (token) {
+          try {
+            const query = `
+              query($username: String!, $from: DateTime!, $to: DateTime!) {
+                user(login: $username) {
+                  contributionsCollection(from: $from, to: $to) {
+                    contributionCalendar {
+                      weeks {
+                        contributionDays {
+                          date
+                          contributionCount
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            `;
+
+            const response = await fetch('https://api.github.com/graphql', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query,
+                variables: {
+                  username,
+                  from: oneYearAgo.toISOString(),
+                  to: today.toISOString(),
+                },
+              }),
+            });
+
+            const data = await response.json();
+            
+            if (data.errors) {
+              throw new Error(data.errors[0].message);
+            }
+
+            if (data.data?.user?.contributionsCollection?.contributionCalendar?.weeks) {
+              data.data.user.contributionsCollection.contributionCalendar.weeks.forEach(week => {
+                week.contributionDays.forEach(day => {
+                  contributionData[day.date] = day.contributionCount;
+                });
+              });
+              
+              setContributions(contributionData);
+              setLoading(false);
+              return; // Successfully fetched, exit early
+            }
+          } catch (error) {
+            console.error('GraphQL API failed, falling back to public API:', error);
+            // Fall through to public API fallback
+          }
+        }
+
+        // Fallback to public events API (public repos only)
+        let page = 1;
+        let hasMore = true;
+        const maxPages = 10;
+        
+        while (hasMore && page <= maxPages) {
+          const response = await fetch(
+            `https://api.github.com/users/${username}/events/public?per_page=100&page=${page}`
+          );
+          
+          if (!response.ok) break;
+          
+          const events = await response.json();
+          if (events.length === 0) {
+            hasMore = false;
+            break;
+          }
+          
+          events.forEach(event => {
+            if (event.created_at) {
+              const date = event.created_at.split('T')[0];
+              contributionData[date] = (contributionData[date] || 0) + 1;
+            }
+          });
+          
+          page++;
+        }
+
+        setContributions(contributionData);
+      } catch (error) {
+        console.error('Error fetching contributions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContributions();
+  }, []);
+
+  // Generate calendar weeks - memoized for performance
+  const calendarWeeks = useMemo(() => {
+    const weeks = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setFullYear(today.getFullYear() - 1);
+    oneYearAgo.setDate(oneYearAgo.getDate() - 1); // Go back one more day to ensure full year
+    
+    // Find the Sunday before or on oneYearAgo
+    const startDate = new Date(oneYearAgo);
+    const dayOfWeek = startDate.getDay();
+    startDate.setDate(startDate.getDate() - dayOfWeek);
+    startDate.setHours(0, 0, 0, 0);
+
+    const currentDate = new Date(startDate);
+    const endDate = new Date(today);
+    endDate.setHours(23, 59, 59, 999);
+
+    while (currentDate <= endDate) {
+      const week = [];
+      for (let i = 0; i < 7; i++) {
+        if (currentDate <= endDate) {
+          const dateStr = currentDate.toISOString().split('T')[0];
+          week.push({
+            date: dateStr,
+            count: contributions[dateStr] || 0,
+          });
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
+      if (week.length > 0) {
+        weeks.push(week);
+      }
+    }
+
+    return weeks;
+  }, [contributions]);
+
+  // Get contribution color - using green shades like GitHub
+  const getContributionColor = (count) => {
+    if (count === 0) {
+      return isDarkMode 
+        ? 'bg-gray-800 border border-gray-700' 
+        : 'bg-gray-100 border border-gray-200';
+    } else if (count <= 2) {
+      return isDarkMode ? 'bg-green-800' : 'bg-green-200';
+    } else if (count <= 5) {
+      return isDarkMode ? 'bg-green-700' : 'bg-green-300';
+    } else if (count <= 10) {
+      return isDarkMode ? 'bg-green-600' : 'bg-green-400';
+    } else {
+      return isDarkMode ? 'bg-green-500' : 'bg-green-500';
+    }
+  };
+
+  // Data arrays for rendering
+  const techStack = [
+    { icon: FaJava, name: 'Java' },
+    { icon: FaPython, name: 'Python' },
+    { icon: FaReact, name: 'React' },
+    { icon: SiTypescript, name: 'TypeScript' },
+    { icon: SiFirebase, name: 'Firebase' },
+    { icon: SiJson, name: 'JSON' },
+    { icon: FaHtml5, name: 'HTML' },
+    { icon: FaCss3Alt, name: 'CSS' },
+    { icon: FaJsSquare, name: 'JavaScript' },
+  ];
+
+  const experiences = [
+    {
+      company: 'OCV, LLC',
+      title: 'Part-Time Software Engineering Intern',
+      location: 'Opelika AL',
+      period: 'September 2025 - Present',
+      bullets: [
+        '• Built and configured client mobile apps using OCV\'s proprietary platform and formatted JSON structures',
+        '• Implemented client requests by updating app content, configurations, and feature settings through internal tools',
+        '• Performed quality control (QC) testing to ensure app functionality and UI consistency before release',
+        '• Collaborated with developers, operations, and graphics teams to manage app updates and production issues',
+        '• Released and maintained iOS and Android apps on the App Store and Google Play Console, ensuring smooth deployment and version tracking',
+      ],
+    },
+    {
+      company: 'Room2Room Movers',
+      title: 'Part-Time Software Engineering Intern',
+      location: 'Auburn AL',
+      period: 'January 2026 - Present',
+      bullets: [
+        '• Developed and maintained application features using React and TypeScript in a production codebase',
+        '• Implemented and updated Firebase-backed backend logic and API endpoints to support application functionality',
+        '• Worked with authentication, configuration data, and state management across frontend and backend',
+        '• Fixed bugs and improved code quality by debugging React hooks and shared application state',
+        '• Collaborated with engineers through Jira tickets, pull requests, and code reviews in an agile workflow',
+      ],
+    },
+  ];
+
+  const projects = [
+    {
+      title: 'Tiger Scheduler Course Auto-Register Tool',
+      description: 'A Python automation script that monitors course availability on Auburn University\'s TigerScheduler platform. Automatically checks for open seats every minute, filters courses, and handles auto-login and registration actions.',
+      tags: ['Python', 'Selenium', 'Web Automation'],
+      githubUrl: 'https://github.com/UlissesMolina/Tiger-Scheduler-Course-Auto-Register-Tool',
+    },
+    {
+      title: 'Personal Portfolio',
+      description: 'A modern, minimal portfolio website showcasing my experience, projects, and technical skills. Built with React and Vite, featuring a clean design with smooth animations and responsive layout.',
+      tags: ['React', 'JavaScript', 'Tailwind CSS', 'Vite'],
+      githubUrl: 'https://github.com/UlissesMolina/Portfolio',
+    },
+  ];
+
+  // Get month labels - memoized for performance
+  const monthLabels = useMemo(() => {
+    const labels = [];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    let lastMonth = -1;
+
+    calendarWeeks.forEach((week, weekIndex) => {
+      if (week.length > 0) {
+        const firstDay = new Date(week[0].date);
+        const month = firstDay.getMonth();
+        const day = firstDay.getDate();
+
+        if (month !== lastMonth && day <= 7) {
+          labels.push({ weekIndex, month: months[month] });
+          lastMonth = month;
+        }
+      }
+    });
+
+    return labels;
+  }, [calendarWeeks]);
 
   return (
     <div className={`relative min-h-screen overflow-hidden transition-colors duration-300 ${
@@ -310,7 +435,77 @@ function App() {
         }}
       />
       <div className="relative max-w-4xl mx-auto px-6 sm:px-8 z-10">
-        <header className="pt-16 pb-12">
+        {/* Navigation Menu */}
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
+          isDarkMode ? 'bg-zinc-950/80 backdrop-blur-sm border-b border-gray-800' : 'bg-white/80 backdrop-blur-sm border-b border-gray-200'
+        }`}>
+          <div className="max-w-4xl mx-auto px-6 sm:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex gap-6 items-center">
+                <button
+                  onClick={() => scrollToSection(0)}
+                  className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  About
+                </button>
+                <button
+                  onClick={() => scrollToSection(1)}
+                  className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Experience
+                </button>
+                <button
+                  onClick={() => scrollToSection(2)}
+                  className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Tech Stack
+                </button>
+                <button
+                  onClick={() => scrollToSection(3)}
+                  className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Projects
+                </button>
+                <button
+                  onClick={() => scrollToSection(4)}
+                  className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  GitHub Stats
+                </button>
+                <button
+                  onClick={() => scrollToSection(5)}
+                  className={`text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Contributions
+                </button>
+              </div>
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-lg transition-colors ${
+                  isDarkMode 
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                }`}
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
+              </button>
+            </div>
+          </div>
+        </nav>
+        <header className="pt-32 pb-12">
           <div className="flex flex-col items-center gap-6">
             <h1 className={`text-3xl sm:text-4xl md:text-5xl font-light text-center transition-colors ${
               isDarkMode ? 'text-white' : 'text-gray-900'
@@ -328,36 +523,24 @@ function App() {
               }`}>
                 <FaLinkedin size={20} />
               </a>
-              <a href="mailto:umolina2005your@email.com" className={`transition-colors duration-200 ${
+              <a href="mailto:umolina2005@gmail.com" className={`transition-colors duration-200 ${
                 isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
               }`}>
                 <FaEnvelope size={20} />
               </a>
-              {/* Theme toggle - visible on mobile, hidden on larger screens */}
-              <button
-                onClick={toggleTheme}
-                className={`md:hidden p-2 rounded-lg transition-colors ${
+              <a 
+                href="/resume.pdf" 
+                download
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors ${
                   isDarkMode 
-                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                    ? 'text-gray-300 bg-gray-800 hover:bg-gray-700 border border-gray-700' 
+                    : 'text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300'
                 }`}
-                aria-label="Toggle theme"
               >
-                {isDarkMode ? <FaSun size={20} /> : <FaMoon size={20} />}
-              </button>
+                <FaDownload size={16} />
+                <span>Download CV</span>
+              </a>
             </div>
-            {/* Theme toggle - hidden on mobile, visible on larger screens */}
-            <button
-              onClick={toggleTheme}
-              className={`hidden md:block absolute top-16 right-6 sm:right-8 p-2 rounded-lg transition-colors ${
-                isDarkMode 
-                  ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-              }`}
-              aria-label="Toggle theme"
-            >
-              {isDarkMode ? <FaSun size={20} /> : <FaMoon size={20} />}
-            </button>
           </div>
         </header>
         <main className="flex flex-col gap-12 sm:gap-16">
@@ -372,7 +555,7 @@ function App() {
             <p className={`text-sm sm:text-base max-w-2xl transition-colors ${
               isDarkMode ? 'text-gray-400' : 'text-gray-700'
             }`}>
-              I am currenlty a sophomore at Auburn University as a Software Engineering major. Welcome to my portfolio!
+              I am currently a sophomore at Auburn University as a Software Engineering major. Interested in full-stack development and quantitative finance. 
             </p>
           </section>
           {/* Experience Section */}
@@ -385,85 +568,47 @@ function App() {
             }`}>Experience</h2>
             {/* Toggle Switch */}
             <div className="flex items-center gap-3 mb-6">
-              <button
-                onClick={() => setSelectedExperience(0)}
-                className={`px-4 py-2 text-sm transition-all duration-200 ${
-                  selectedExperience === 0
-                    ? isDarkMode ? 'text-white border-b border-white' : 'text-gray-900 border-b border-gray-900'
-                    : isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                OCV, LLC
-              </button>
-              <button
-                onClick={() => setSelectedExperience(1)}
-                className={`px-4 py-2 text-sm transition-all duration-200 ${
-                  selectedExperience === 1
-                    ? isDarkMode ? 'text-white border-b border-white' : 'text-gray-900 border-b border-gray-900'
-                    : isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                Room2Room Movers
-              </button>
+              {experiences.map((exp, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedExperience(index)}
+                  className={`px-4 py-2 text-sm transition-all duration-200 ${
+                    selectedExperience === index
+                      ? isDarkMode ? 'text-white border-b border-white' : 'text-gray-900 border-b border-gray-900'
+                      : isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  {exp.company}
+                </button>
+              ))}
             </div>
             {/* Experience Content */}
             <div className="w-full max-w-2xl">
-              {selectedExperience === 0 ? (
+              {experiences[selectedExperience] && (
                 <div className="text-center">
                   <div className="mb-3">
                     <h3 className={`text-base sm:text-lg font-light mb-1 transition-colors ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}>
-                      Part-Time Software Engineering Intern
+                      {experiences[selectedExperience].title}
                     </h3>
                     <p className={`text-xs sm:text-sm mb-2 transition-colors ${
                       isDarkMode ? 'text-gray-400' : 'text-gray-700'
                     }`}>
-                      OCV, LLC | Opelika AL
+                      {experiences[selectedExperience].company} | {experiences[selectedExperience].location}
                     </p>
                     <p className={`text-xs sm:text-sm transition-colors ${
                       isDarkMode ? 'text-gray-500' : 'text-gray-600'
                     }`}>
-                      September 2025 - Present
+                      {experiences[selectedExperience].period}
                     </p>
                   </div>
                   <ul className={`list-none space-y-2 text-xs sm:text-sm text-left max-w-xl mx-auto transition-colors ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-700'
                   }`}>
-                    <li>• Built and configured client mobile apps using OCV's proprietary platform and formatted JSON structures</li>
-                    <li>• Implemented client requests by updating app content, configurations, and feature settings through internal tools</li>
-                    <li>• Performed quality control (QC) testing to ensure app functionality and UI consistency before release</li>
-                    <li>• Collaborated with developers, operations, and graphics teams to manage app updates and production issues</li>
-                    <li>• Released and maintained iOS and Android apps on the App Store and Google Play Console, ensuring smooth deployment and version tracking</li>
-                  </ul>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <div className="mb-3">
-                    <h3 className={`text-base sm:text-lg font-light mb-1 transition-colors ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      Part-Time Software Engineering Intern
-                    </h3>
-                    <p className={`text-xs sm:text-sm mb-2 transition-colors ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-700'
-                    }`}>
-                      Room2Room Movers | Auburn AL
-                    </p>
-                    <p className={`text-xs sm:text-sm transition-colors ${
-                      isDarkMode ? 'text-gray-500' : 'text-gray-600'
-                    }`}>
-                      January 2026 - Present
-                    </p>
-                  </div>
-                  <ul className={`list-none space-y-2 text-xs sm:text-sm text-left max-w-xl mx-auto transition-colors ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-700'
-                  }`}>
-                    <li>• Developed and maintained application features using React and TypeScript in a production codebase</li>
-                    <li>• Implemented and updated Firebase-backed backend logic and API endpoints to support application functionality</li>
-                    <li>• Worked with authentication, configuration data, and state management across frontend and backend</li>
-                    <li>• Fixed bugs and improved code quality by debugging React hooks and shared application state</li>
-                    <li>• Collaborated with engineers through Jira tickets, pull requests, and code reviews in an agile workflow</li>
+                    {experiences[selectedExperience].bullets.map((bullet, idx) => (
+                      <li key={idx}>{bullet}</li>
+                    ))}
                   </ul>
                 </div>
               )}
@@ -478,42 +623,15 @@ function App() {
               isDarkMode ? 'text-gray-300' : 'text-gray-800'
             }`}>Tech Stack</h2>
             <div className="flex flex-wrap justify-center gap-6 sm:gap-8">
-              <div className="flex flex-col items-center">
-                <FaJava className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Java</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <FaPython className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Python</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <FaReact className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>React</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <SiTypescript className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>TypeScript</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <SiFirebase className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Firebase</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <SiJson className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>JSON</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <FaHtml5 className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>HTML</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <FaCss3Alt className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>CSS</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <FaJsSquare className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
-                <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>JavaScript</span>
-              </div>
+              {techStack.map((tech, index) => {
+                const Icon = tech.icon;
+                return (
+                  <div key={index} className="flex flex-col items-center">
+                    <Icon className={`mb-1 transition-colors ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`} size={24} />
+                    <span className={`text-xs sm:text-sm transition-colors ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>{tech.name}</span>
+                  </div>
+                );
+              })}
             </div>
           </section>
           {/* Projects Section */}
@@ -525,126 +643,156 @@ function App() {
               isDarkMode ? 'text-gray-300' : 'text-gray-800'
             }`}>Projects</h2>
             <div className="flex flex-col gap-8 w-full max-w-3xl">
-              {/* Tiger Scheduler Project */}
-              <div className={`group relative border-t pt-6 pb-4 transition-all duration-300 ${
-                isDarkMode 
-                  ? 'border-gray-800 hover:border-gray-700' 
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}>
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-3">
-                  <div className="flex-1">
-                    <h3 className={`text-lg sm:text-xl font-light mb-2 transition-colors ${
-                      isDarkMode 
-                        ? 'text-white group-hover:text-gray-200' 
-                        : 'text-gray-900 group-hover:text-gray-800'
-                    }`}>
-                      Tiger Scheduler Course Auto-Register Tool
-                    </h3>
-                    <p className={`text-sm leading-relaxed transition-colors ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-700'
-                    }`}>
-                      A Python automation script that monitors course availability on Auburn University's TigerScheduler platform. Automatically checks for open seats every minute, filters courses, and handles auto-login and registration actions.
-                    </p>
+              {projects.map((project, index) => (
+                <div key={index} className={`group relative border-t pt-6 pb-4 transition-all duration-300 ${
+                  isDarkMode 
+                    ? 'border-gray-800 hover:border-gray-700' 
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}>
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-3">
+                    <div className="flex-1">
+                      <h3 className={`text-lg sm:text-xl font-light mb-2 transition-colors ${
+                        isDarkMode 
+                          ? 'text-white group-hover:text-gray-200' 
+                          : 'text-gray-900 group-hover:text-gray-800'
+                      }`}>
+                        {project.title}
+                      </h3>
+                      <p className={`text-sm leading-relaxed transition-colors ${
+                        isDarkMode ? 'text-gray-400' : 'text-gray-700'
+                      }`}>
+                        {project.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    {project.tags.map((tag, tagIndex) => (
+                      <span key={tagIndex} className={`text-xs px-2 py-1 border rounded transition-colors ${
+                        isDarkMode 
+                          ? 'text-gray-500 border-gray-800' 
+                          : 'text-gray-600 border-gray-300'
+                      }`}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <a 
+                      href={project.githubUrl} 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`text-xs transition-colors flex items-center gap-1 ${
+                        isDarkMode 
+                          ? 'text-gray-500 hover:text-gray-300' 
+                          : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      <FaGithub size={14} />
+                      Code
+                    </a>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <span className={`text-xs px-2 py-1 border rounded transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-500 border-gray-800' 
-                      : 'text-gray-600 border-gray-300'
-                  }`}>Python</span>
-                  <span className={`text-xs px-2 py-1 border rounded transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-500 border-gray-800' 
-                      : 'text-gray-600 border-gray-300'
-                  }`}>Selenium</span>
-                  <span className={`text-xs px-2 py-1 border rounded transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-500 border-gray-800' 
-                      : 'text-gray-600 border-gray-300'
-                  }`}>Web Automation</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <a 
-                    href="https://github.com/UlissesMolina/Tiger-Scheduler-Course-Auto-Register-Tool" 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`text-xs transition-colors flex items-center gap-1 ${
-                      isDarkMode 
-                        ? 'text-gray-500 hover:text-gray-300' 
-                        : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                  >
-                    <FaGithub size={14} />
-                    Code
-                  </a>
-                </div>
-              </div>
-              {/* Portfolio Project */}
-              <div className={`group relative border-t pt-6 pb-4 transition-all duration-300 ${
-                isDarkMode 
-                  ? 'border-gray-800 hover:border-gray-700' 
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}>
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-3">
-                  <div className="flex-1">
-                    <h3 className={`text-lg sm:text-xl font-light mb-2 transition-colors ${
-                      isDarkMode 
-                        ? 'text-white group-hover:text-gray-200' 
-                        : 'text-gray-900 group-hover:text-gray-800'
-                    }`}>
-                      Personal Portfolio
-                    </h3>
-                    <p className={`text-sm leading-relaxed transition-colors ${
-                      isDarkMode ? 'text-gray-400' : 'text-gray-700'
-                    }`}>
-                      A modern, minimal portfolio website showcasing my experience, projects, and technical skills. Built with React and Vite, featuring a clean design with smooth animations and responsive layout.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <span className={`text-xs px-2 py-1 border rounded transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-500 border-gray-800' 
-                      : 'text-gray-600 border-gray-300'
-                  }`}>React</span>
-                  <span className={`text-xs px-2 py-1 border rounded transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-500 border-gray-800' 
-                      : 'text-gray-600 border-gray-300'
-                  }`}>JavaScript</span>
-                  <span className={`text-xs px-2 py-1 border rounded transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-500 border-gray-800' 
-                      : 'text-gray-600 border-gray-300'
-                  }`}>Tailwind CSS</span>
-                  <span className={`text-xs px-2 py-1 border rounded transition-colors ${
-                    isDarkMode 
-                      ? 'text-gray-500 border-gray-800' 
-                      : 'text-gray-600 border-gray-300'
-                  }`}>Vite</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <a 
-                    href="https://github.com/UlissesMolina/Portfolio" 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`text-xs transition-colors flex items-center gap-1 ${
-                      isDarkMode 
-                        ? 'text-gray-500 hover:text-gray-300' 
-                        : 'text-gray-600 hover:text-gray-800'
-                    }`}
-                  >
-                    <FaGithub size={14} />
-                    Code
-                  </a>
-                </div>
-              </div>
+              ))}
             </div>
+          </section>
+          {/* GitHub Stats Card Section */}
+          <section 
+            ref={el => sectionRefs.current[4] = el}
+            className="flex flex-col items-center w-full opacity-0"
+          >
+            <h2 className={`text-xl sm:text-2xl font-light mb-8 transition-colors ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-800'
+            }`}>GitHub Statistics</h2>
+            {loadingStats ? (
+              <div className={`text-sm transition-colors ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-500'
+              }`}>Loading stats...</div>
+            ) : githubStats ? (
+              <div className={`w-full max-w-2xl grid grid-cols-2 sm:grid-cols-3 gap-4 p-6 rounded-lg border transition-colors ${
+                isDarkMode 
+                  ? 'bg-gray-900/50 border-gray-800' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex flex-col items-center">
+                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {githubStats.publicRepos}
+                  </div>
+                  <div className={`text-xs sm:text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    Public Repos
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {githubStats.totalStars}
+                  </div>
+                  <div className={`text-xs sm:text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    Total Stars
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {githubStats.totalForks}
+                  </div>
+                  <div className={`text-xs sm:text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    Total Forks
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {githubStats.followers}
+                  </div>
+                  <div className={`text-xs sm:text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    Followers
+                  </div>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {githubStats.following}
+                  </div>
+                  <div className={`text-xs sm:text-sm transition-colors ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
+                  }`}>
+                    Following
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <a 
+                    href="https://github.com/UlissesMolina" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className={`text-sm transition-colors flex items-center gap-1 ${
+                      isDarkMode 
+                        ? 'text-green-400 hover:text-green-300' 
+                        : 'text-green-600 hover:text-green-700'
+                    }`}
+                  >
+                    View Profile <FaGithub size={14} />
+                  </a>
+                </div>
+              </div>
+            ) : null}
           </section>
           {/* GitHub Contributions Section */}
           <section 
-            ref={el => sectionRefs.current[4] = el}
+            ref={el => sectionRefs.current[5] = el}
             className="flex flex-col items-center w-full opacity-0"
           >
             <h2 className={`text-xl sm:text-2xl font-light mb-8 transition-colors ${
@@ -653,133 +801,88 @@ function App() {
             {loading ? (
               <div className={`text-sm transition-colors ${
                 isDarkMode ? 'text-gray-500' : 'text-gray-500'
-              }`}>Loading contributions...</div>
+              }`}>Loading...</div>
             ) : (
-              <div className="w-full relative z-20" style={{ overflowX: 'auto' }}>
-                {(() => {
-                  console.log(`Rendering calendar with ${contributions.length} days`);
-                  
-                  // Simple: group contributions into weeks (7 days each)
-                  const weeks = [];
-                  for (let i = 0; i < contributions.length; i += 7) {
-                    weeks.push(contributions.slice(i, i + 7));
-                  }
-                  
-                  console.log(`Grouped into ${weeks.length} weeks`);
-                  
-                  // Get today's date to determine last week
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const todayStr = today.toISOString().split('T')[0];
-                  const todayDayOfWeek = today.getDay();
-                  
-                  // Month names
-                  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                  let lastMonth = -1;
-                  
-                  return (
-                    <>
-                      {/* Month labels */}
-                      <div className="flex gap-1 overflow-x-auto pb-2 px-2 mb-1 scrollbar-hide" style={{ minWidth: 'max-content' }}>
-                        {weeks.map((week, weekIndex) => {
-                          const firstDay = week[0];
-                          if (!firstDay) return <div key={`month-${weekIndex}`} className="w-2.5 sm:w-3 flex-shrink-0" />;
-                          
-                          const date = new Date(firstDay.date);
-                          const currentMonth = date.getMonth();
-                          const isFirstWeekOfMonth = currentMonth !== lastMonth;
-                          if (isFirstWeekOfMonth) lastMonth = currentMonth;
-                          
-                          return (
-                            <div key={`month-${weekIndex}`} className={`flex items-start justify-center flex-shrink-0 ${isFirstWeekOfMonth ? 'min-w-[24px]' : 'w-2.5 sm:w-3'}`}>
-                              {isFirstWeekOfMonth && (
-                                <span className={`text-xs whitespace-nowrap transition-colors ${
-                                  isDarkMode ? 'text-gray-500' : 'text-gray-600'
-                                }`}>
-                                  {monthNames[currentMonth]}
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      {/* Calendar grid */}
-                      <div className="flex gap-1 overflow-x-auto pb-4 px-2 pr-4 scrollbar-hide" style={{ minWidth: 'max-content' }}>
-                        {weeks.map((week, weekIndex) => {
-                          console.log(`Rendering week ${weekIndex + 1} of ${weeks.length}`);
-                          const isLastWeek = weekIndex === weeks.length - 1;
-                          const lastDay = week[week.length - 1];
-                          const isCurrentWeek = lastDay && lastDay.date >= todayStr;
-                          
-                          // For last week, only show days up to today
-                          const daysToShow = (isLastWeek && isCurrentWeek) ? todayDayOfWeek + 1 : week.length;
-                          
-                          return (
-                            <div key={weekIndex} className="flex flex-col gap-1 flex-shrink-0">
-                              {week.slice(0, daysToShow).map((day, dayIndex) => {
-                                if (!day) return null;
-                                
-                                // Map contribution count to intensity
-                                let intensity = 0;
-                                if (day.count === 0) intensity = 0;
-                                else if (day.count === 1) intensity = 1;
-                                else if (day.count <= 3) intensity = 2;
-                                else if (day.count <= 5) intensity = 3;
-                                else intensity = 4;
-                                
-                                const colors = isDarkMode ? [
-                                  'bg-gray-800 border border-gray-700',  // 0 contributions - lighter so visible
-                                  'bg-gray-700',                          // 1 contribution
-                                  'bg-gray-600',                          // 2-3 contributions
-                                  'bg-gray-500',                          // 4-5 contributions
-                                  'bg-gray-400'                           // 6+ contributions
-                                ] : [
-                                  'bg-gray-100 border border-gray-200',
-                                  'bg-blue-200',
-                                  'bg-blue-300',
-                                  'bg-blue-400',
-                                  'bg-blue-500'
-                                ];
-                                
-                                return (
-                                  <div
-                                    key={`${weekIndex}-${dayIndex}`}
-                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded ${colors[intensity]} ${isDarkMode ? 'hover:ring-gray-500' : 'hover:ring-blue-400'} hover:ring-1 hover:scale-110 transition-all cursor-pointer`}
-                                    title={`${day.count} contribution${day.count !== 1 ? 's' : ''} on ${new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-                                  />
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </>
-                  );
-                })()}
-                <div className={`flex items-center justify-center gap-4 mt-6 text-xs transition-colors ${
-                  isDarkMode ? 'text-gray-500' : 'text-gray-600'
-                }`}>
-                  <span className={isDarkMode ? 'text-gray-600' : 'text-gray-500'}>Less</span>
-                  <div className="flex gap-1">
-                    {isDarkMode ? (
-                      <>
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-gray-800 border border-gray-700" />
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-gray-700" />
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-gray-600" />
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-gray-500" />
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-gray-400" />
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-gray-100 border border-gray-200" />
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-blue-200" />
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-blue-300" />
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-blue-400" />
-                        <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded bg-blue-500" />
-                      </>
-                    )}
+              <div className="w-full overflow-x-auto pb-4 scrollbar-hide">
+                <div className="flex flex-col gap-0.5" style={{ minWidth: 'max-content' }}>
+                  {/* Month labels */}
+                  <div className="flex gap-0.5 mb-2 px-2" style={{ minWidth: 'max-content' }}>
+                    {(() => {
+                      const labels = new Array(calendarWeeks.length).fill('');
+                      
+                      monthLabels.forEach(label => {
+                        labels[label.weekIndex] = label.month;
+                      });
+                      
+                      return labels.map((month, idx) => (
+                        <div
+                          key={idx}
+                          className={`text-xs transition-colors w-2.5 sm:w-3 flex items-start justify-center flex-shrink-0 ${
+                            isDarkMode ? 'text-gray-500' : 'text-gray-600'
+                          }`}
+                        >
+                          {month && <span className="whitespace-nowrap">{month}</span>}
+                        </div>
+                      ));
+                    })()}
                   </div>
-                  <span className={isDarkMode ? 'text-gray-600' : 'text-gray-500'}>More</span>
+                  {/* Calendar grid */}
+                  <div className="flex gap-0.5 px-2" style={{ minWidth: 'max-content' }}>
+                    {calendarWeeks.map((week, weekIndex) => (
+                      <div key={weekIndex} className="flex flex-col gap-0.5 flex-shrink-0">
+                        {week.map((day, dayIndex) => {
+                          const date = new Date(day.date);
+                          const formattedDate = date.toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                          });
+                          return (
+                            <div
+                              key={`${weekIndex}-${dayIndex}`}
+                              className={`w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-sm transition-all cursor-pointer group relative ${getContributionColor(day.count)} ${
+                                isDarkMode ? 'hover:ring-green-500' : 'hover:ring-green-400'
+                              } hover:ring-1 hover:scale-110`}
+                            >
+                              <div className={`absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none ${
+                                isDarkMode 
+                                  ? 'bg-gray-800 text-gray-300 border border-gray-700' 
+                                  : 'bg-white text-gray-800 border border-gray-300 shadow-lg'
+                              }`}>
+                                {day.count} contribution{day.count !== 1 ? 's' : ''} on {formattedDate}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Legend */}
+                  <div className="flex items-center justify-center gap-4 mt-6 text-xs">
+                    <span className={`transition-colors ${
+                      isDarkMode ? 'text-gray-600' : 'text-gray-500'
+                    }`}>Less</span>
+                    <div className="flex gap-0.5">
+                      <div className={`w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-sm ${
+                        isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-gray-100 border border-gray-200'
+                      }`}></div>
+                      <div className={`w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-sm ${
+                        isDarkMode ? 'bg-green-800' : 'bg-green-200'
+                      }`}></div>
+                      <div className={`w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-sm ${
+                        isDarkMode ? 'bg-green-700' : 'bg-green-300'
+                      }`}></div>
+                      <div className={`w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-sm ${
+                        isDarkMode ? 'bg-green-600' : 'bg-green-400'
+                      }`}></div>
+                      <div className={`w-2.5 sm:w-3 h-2.5 sm:h-3 rounded-sm ${
+                        isDarkMode ? 'bg-green-500' : 'bg-green-500'
+                      }`}></div>
+                    </div>
+                    <span className={`transition-colors ${
+                      isDarkMode ? 'text-gray-600' : 'text-gray-500'
+                    }`}>More</span>
+                  </div>
                 </div>
               </div>
             )}
