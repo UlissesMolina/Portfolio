@@ -13,8 +13,6 @@ function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [contributions, setContributions] = useState({});
   const [loading, setLoading] = useState(true);
-  const [githubStats, setGithubStats] = useState(null);
-  const [loadingStats, setLoadingStats] = useState(true);
   const sectionRefs = useRef([]);
 
   // Optimized mouse tracking for background light effect
@@ -91,7 +89,7 @@ function App() {
       });
     }, observerOptions);
 
-    // Observe all sections (now includes 6 sections: About, Experience, Tech Stack, Projects, GitHub Stats, Contributions)
+    // Observe all sections: About, Experience, Tech Stack, Projects, Contributions
     sectionRefs.current.forEach(ref => {
       if (ref) observer.observe(ref);
     });
@@ -107,57 +105,6 @@ function App() {
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
-
-  // Smooth scroll to section
-  const scrollToSection = (index) => {
-    const section = sectionRefs.current[index];
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  // Fetch GitHub stats
-  useEffect(() => {
-    const fetchGitHubStats = async () => {
-      setLoadingStats(true);
-      try {
-        const username = 'UlissesMolina';
-        const token = import.meta.env.VITE_GITHUB_TOKEN;
-        
-        const headers = token ? {
-          'Authorization': `Bearer ${token}`,
-        } : {};
-
-        // Fetch user info
-        const userResponse = await fetch(`https://api.github.com/users/${username}`, { headers });
-        const userData = await userResponse.json();
-
-        // Fetch repos
-        const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, { headers });
-        const reposData = await reposResponse.json();
-
-        // Calculate stats
-        const totalStars = reposData.reduce((sum, repo) => sum + repo.stargazers_count, 0);
-        const totalForks = reposData.reduce((sum, repo) => sum + repo.forks_count, 0);
-        const publicRepos = reposData.length;
-        const totalCommits = userData.public_repos; // Approximate
-
-        setGithubStats({
-          followers: userData.followers || 0,
-          following: userData.following || 0,
-          publicRepos,
-          totalStars,
-          totalForks,
-        });
-      } catch (error) {
-        console.error('Error fetching GitHub stats:', error);
-      } finally {
-        setLoadingStats(false);
-      }
-    };
-
-    fetchGitHubStats();
-  }, []);
 
   // Fetch GitHub contributions - uses GraphQL API for private repos if token available
   useEffect(() => {
@@ -435,84 +382,25 @@ function App() {
         }}
       />
       <div className="relative max-w-4xl mx-auto px-6 sm:px-8 z-10">
-        {/* Navigation Menu */}
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
-          isDarkMode ? 'bg-zinc-950/80 backdrop-blur-sm border-b border-gray-800' : 'bg-white/80 backdrop-blur-sm border-b border-gray-200'
-        }`}>
-          <div className="max-w-4xl mx-auto px-6 sm:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex gap-6 items-center">
-                <button
-                  onClick={() => scrollToSection(0)}
-                  className={`text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  About
-                </button>
-                <button
-                  onClick={() => scrollToSection(1)}
-                  className={`text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Experience
-                </button>
-                <button
-                  onClick={() => scrollToSection(2)}
-                  className={`text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Tech Stack
-                </button>
-                <button
-                  onClick={() => scrollToSection(3)}
-                  className={`text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Projects
-                </button>
-                <button
-                  onClick={() => scrollToSection(4)}
-                  className={`text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  GitHub Stats
-                </button>
-                <button
-                  onClick={() => scrollToSection(5)}
-                  className={`text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Contributions
-                </button>
-              </div>
-              <button
-                onClick={toggleTheme}
-                className={`p-2 rounded-lg transition-colors ${
-                  isDarkMode 
-                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                }`}
-                aria-label="Toggle theme"
-              >
-                {isDarkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
-              </button>
-            </div>
-          </div>
-        </nav>
-        <header className="pt-32 pb-12">
+        <header className="relative pt-16 pb-12">
+          <button
+            onClick={toggleTheme}
+            className={`absolute top-0 right-0 hidden md:block p-2 rounded-lg transition-colors ${
+              isDarkMode 
+                ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+            }`}
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
+          </button>
           <div className="flex flex-col items-center gap-6">
             <h1 className={`text-3xl sm:text-4xl md:text-5xl font-light text-center transition-colors ${
               isDarkMode ? 'text-white' : 'text-gray-900'
             }`}>
               Ulisses Molina-Becerra
             </h1>
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center flex-wrap justify-center">
               <a href="https://github.com/UlissesMolina" target="_blank" rel="noopener noreferrer" className={`transition-colors duration-200 ${
                 isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'
               }`}>
@@ -528,6 +416,17 @@ function App() {
               }`}>
                 <FaEnvelope size={20} />
               </a>
+              <button
+                onClick={toggleTheme}
+                className={`md:hidden p-2 rounded-lg transition-colors ${
+                  isDarkMode 
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-800' 
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                }`}
+                aria-label="Toggle theme"
+              >
+                {isDarkMode ? <FaSun size={18} /> : <FaMoon size={18} />}
+              </button>
               <a 
                 href="/resume.pdf" 
                 download
@@ -695,104 +594,9 @@ function App() {
               ))}
             </div>
           </section>
-          {/* GitHub Stats Card Section */}
-          <section 
-            ref={el => sectionRefs.current[4] = el}
-            className="flex flex-col items-center w-full opacity-0"
-          >
-            <h2 className={`text-xl sm:text-2xl font-light mb-8 transition-colors ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-800'
-            }`}>GitHub Statistics</h2>
-            {loadingStats ? (
-              <div className={`text-sm transition-colors ${
-                isDarkMode ? 'text-gray-500' : 'text-gray-500'
-              }`}>Loading stats...</div>
-            ) : githubStats ? (
-              <div className={`w-full max-w-2xl grid grid-cols-2 sm:grid-cols-3 gap-4 p-6 rounded-lg border transition-colors ${
-                isDarkMode 
-                  ? 'bg-gray-900/50 border-gray-800' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}>
-                <div className="flex flex-col items-center">
-                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    {githubStats.publicRepos}
-                  </div>
-                  <div className={`text-xs sm:text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Public Repos
-                  </div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    {githubStats.totalStars}
-                  </div>
-                  <div className={`text-xs sm:text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Total Stars
-                  </div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    {githubStats.totalForks}
-                  </div>
-                  <div className={`text-xs sm:text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Total Forks
-                  </div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    {githubStats.followers}
-                  </div>
-                  <div className={`text-xs sm:text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Followers
-                  </div>
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className={`text-2xl sm:text-3xl font-light mb-1 transition-colors ${
-                    isDarkMode ? 'text-white' : 'text-gray-900'
-                  }`}>
-                    {githubStats.following}
-                  </div>
-                  <div className={`text-xs sm:text-sm transition-colors ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                  }`}>
-                    Following
-                  </div>
-                </div>
-                <div className="flex flex-col items-center justify-center">
-                  <a 
-                    href="https://github.com/UlissesMolina" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={`text-sm transition-colors flex items-center gap-1 ${
-                      isDarkMode 
-                        ? 'text-green-400 hover:text-green-300' 
-                        : 'text-green-600 hover:text-green-700'
-                    }`}
-                  >
-                    View Profile <FaGithub size={14} />
-                  </a>
-                </div>
-              </div>
-            ) : null}
-          </section>
           {/* GitHub Contributions Section */}
           <section 
-            ref={el => sectionRefs.current[5] = el}
+            ref={el => sectionRefs.current[4] = el}
             className="flex flex-col items-center w-full opacity-0"
           >
             <h2 className={`text-xl sm:text-2xl font-light mb-8 transition-colors ${
