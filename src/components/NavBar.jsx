@@ -1,46 +1,65 @@
 import { FaMoon, FaSun } from 'react-icons/fa';
 
-export default function NavBar({ isDarkMode, onToggleTheme }) {
-  const linkClass = `text-sm transition-colors ${
-    isDarkMode ? 'text-teal-300/90 hover:text-teal-100' : 'text-slate-600 hover:text-slate-900'
-  }`;
-  const buttonClass = `p-1.5 rounded-md transition-colors ${
-    isDarkMode
-      ? 'text-teal-300/90 hover:text-teal-100 hover:bg-white/10'
-      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/80'
-  }`;
+export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '' }) {
+  const navLinks = [
+    { href: '#experience', label: 'Work' },
+    { href: '#projects', label: 'Projects' },
+    { href: '#contact', label: 'Contact' },
+  ];
+
+  const linkClass = (id) => {
+    const base = 'text-sm transition-colors duration-200';
+    const active = id === activeSection;
+    if (active) {
+      return `${base} ${isDarkMode ? 'text-accent font-medium' : 'text-accent font-medium'}`;
+    }
+    return `${base} ${isDarkMode ? 'text-ink-muted hover:text-ink' : 'text-slate-600 hover:text-slate-900'}`;
+  };
 
   return (
     <nav
       className={`sticky top-0 z-20 w-full border-b transition-colors duration-300 ${
         isDarkMode
-          ? 'border-teal-900/30 bg-slate-950/90 backdrop-blur-sm'
-          : 'border-teal-200/60 bg-slate-50/90 backdrop-blur-sm'
+          ? 'border-surface-border bg-surface-bg/90 backdrop-blur-sm'
+          : 'border-slate-200 bg-slate-50/95 backdrop-blur-sm'
       }`}
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-5 py-3 flex flex-wrap items-center justify-center gap-5 sm:gap-6">
-        <a href="#experience" className={linkClass}>
-          Experience
-        </a>
-        <a href="#tech-stack" className={linkClass}>
-          Tech Stack
-        </a>
-        <a href="#projects" className={linkClass}>
-          Projects
-        </a>
-        <a href="#contributions" className={linkClass}>
-          Contributions
-        </a>
-        <button
-          onClick={onToggleTheme}
-          className={buttonClass}
-          aria-label="Toggle theme"
+      <div className="max-w-4xl mx-auto px-4 sm:px-5 py-2.5 flex items-center justify-between gap-4">
+        <a
+          href="#"
+          className={`text-xs font-medium tracking-wide transition-colors ${
+            isDarkMode ? 'text-ink-dim hover:text-accent' : 'text-slate-400 hover:text-accent'
+          }`}
         >
-          {isDarkMode ? <FaSun size={16} /> : <FaMoon size={16} />}
-        </button>
-        <a href="/UlissesResume%20(5).pdf" download="UlissesResume.pdf" className={linkClass}>
-          CV
+          ulisses
         </a>
+        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
+          {navLinks.map(({ href, label }) => (
+            <a key={href} href={href} className={linkClass(href.slice(1))}>
+              {label}
+            </a>
+          ))}
+          <a
+            href="/UlissesResume%20(5).pdf"
+            download="UlissesResume.pdf"
+            className={`text-sm font-medium transition-colors ${
+              isDarkMode ? 'text-ink-muted hover:text-accent' : 'text-slate-600 hover:text-accent'
+            }`}
+          >
+            Resume
+          </a>
+          <button
+            onClick={onToggleTheme}
+            className={`p-1.5 rounded transition-colors ${
+              isDarkMode
+                ? 'text-ink-muted hover:text-ink hover:bg-white/5'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/80'
+            }`}
+            aria-label="Toggle theme"
+          >
+            {isDarkMode ? <FaSun size={12} /> : <FaMoon size={12} />}
+          </button>
+        </div>
       </div>
     </nav>
   );
