@@ -1,12 +1,57 @@
-# React + Vite
+# Personal Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A terminal-style portfolio built with React and Vite. The site looks like a live terminal: type commands to jump to sections, play a word game, or explore projects.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Interactive terminal** — Commands like `work`, `projects`, `contact`, `open github`, plus classic Unix-style replies (`ls`, `pwd`, `whoami`, etc.)
+- **Tab completion** and **↑/↓ command history**
+- **Theme switcher** — Coral, Matrix, Dracula, and Monokai (accent colors + GitHub language bar)
+- **Wordle easter egg** — Type `wordle`, `wordplay`, or `puzzle` to play a 5-letter game in the terminal
+- **Konami code** — ↑↑↓↓←→←→ B A for a small surprise
+- **Work timeline** with expandable bullets and theme-colored connector line
+- **Projects** with code snippets, tags, and links
+- **Recent activity** — GitHub commits and repo language bar (theme-aware)
+- **Session timer** in the footer (replaces static uptime)
+- **Loading bar** when navigating between sections
+- **Live clock** in the nav (desktop)
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React 19
+- Vite 7
+- Tailwind CSS
+- react-icons
+
+## Run Locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173).
+
+## Build
+
+```bash
+npm run build
+npm run preview   # preview production build
+```
+
+## Project Structure
+
+```
+src/
+  App.jsx         # Layout, sections, theme & Konami state
+  App.css         # Theme variables, timeline, load bar, animations
+  components/
+    NavBar.jsx    # $ ulisses@molina ~, links, clock, theme selector
+    Terminal.jsx  # Command parsing, Wordle, history, tab complete
+    ProjectCard.jsx
+    RecentCommitsCard.jsx
+```
+
+## License
+
+Private — portfolio use.
