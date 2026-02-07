@@ -116,11 +116,8 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
           </button>
         </div>
 
-        {/* Mobile: clock + theme selector + hamburger */}
+        {/* Mobile: theme selector + light/dark + hamburger (no clock to keep menu visible) */}
         <div className="flex md:hidden items-center gap-2">
-          <span className={`text-xs font-mono tabular-nums ${isDarkMode ? 'text-ink-dim' : 'text-slate-400'}`} aria-hidden>
-            {clockStr}
-          </span>
           {onThemeChange && (
             <select
               value={theme}
