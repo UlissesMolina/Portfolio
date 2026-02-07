@@ -61,7 +61,7 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
         hover:shadow-lg
         ${isDarkMode
           ? 'border-surface-border bg-surface-card hover:border-accent/30 hover:shadow-accent/10'
-          : 'border-slate-200 bg-white/90 hover:border-accent/40 hover:shadow-slate-300/50'
+          : 'border-slate-300 bg-slate-100 hover:border-accent/40 hover:shadow-slate-300/50'
         }`}
     >
       <a
@@ -84,7 +84,7 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
               <div className={`font-mono text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-auto flex ${
                 isDarkMode ? 'text-ink-muted' : 'text-slate-300'
               }`}>
-                <div className={`select-none pr-3 tabular-nums shrink-0 border-r text-right min-w-[2rem] ${isDarkMode ? 'border-white/10' : 'border-slate-500/20'}`}>
+                <div className={`select-none pr-3 tabular-nums shrink-0 border-r text-right min-w-[2rem] ${isDarkMode ? 'border-white/10' : 'border-slate-400/60'}`}>
                   {project.snippet.split('\n').map((_, i) => (
                     <div key={i} className={isDarkMode ? 'text-ink-dim' : 'text-slate-500'}>{i + 1}</div>
                   ))}
@@ -154,7 +154,7 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
                   className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md transition-colors ${
                     isDarkMode
                       ? 'text-ink-muted border border-surface-border bg-surface-border/40'
-                      : 'text-slate-600 border border-slate-200 bg-slate-50'
+                      : 'text-slate-600 border border-slate-300 bg-slate-100'
                   }`}
                 >
                   {Icon ? <Icon size={10} /> : null}

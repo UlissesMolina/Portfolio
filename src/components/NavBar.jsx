@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react';
 import { FaMoon, FaSun, FaBars, FaTimes } from 'react-icons/fa';
 
-export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '' }) {
+const THEMES = [
+  { id: 'coral', label: 'Coral' },
+  { id: 'matrix', label: 'Matrix' },
+  { id: 'dracula', label: 'Dracula' },
+  { id: 'monokai', label: 'Monokai' },
+];
+
+export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', time, theme = 'coral', onThemeChange }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const clockStr = time ? time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '--:--:--';
 
   const navLinks = [
     { href: '#experience', label: 'Work' },
@@ -11,10 +19,10 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '' }
   ];
 
   const linkClass = (id) => {
-    const base = 'text-sm transition-colors duration-200';
+    const base = 'text-sm font-medium transition-colors duration-200 px-2 py-1 rounded hover:underline underline-offset-2';
     const active = id === activeSection;
     if (active) {
-      return `${base} ${isDarkMode ? 'text-accent font-medium' : 'text-accent font-medium'}`;
+      return `${base} ${isDarkMode ? 'text-accent' : 'text-accent'}`;
     }
     return `${base} ${isDarkMode ? 'text-ink-muted hover:text-ink' : 'text-slate-600 hover:text-slate-900'}`;
   };
@@ -41,21 +49,21 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '' }
       className={`sticky top-0 z-30 w-full border-b transition-colors duration-300 ${
         isDarkMode
           ? 'border-surface-border bg-surface-bg/90 backdrop-blur-sm'
-          : 'border-slate-200 bg-slate-50/95 backdrop-blur-sm'
+          : 'border-slate-300 bg-slate-100/95 backdrop-blur-sm'
       }`}
     >
       <div className="max-w-4xl mx-auto px-4 sm:px-5 py-2.5 flex items-center justify-between gap-4">
         <a
           href="#"
           onClick={closeMobile}
-          className={`text-xs font-medium tracking-wide transition-colors shrink-0 ${
-            isDarkMode ? 'text-ink-dim hover:text-accent' : 'text-slate-400 hover:text-accent'
+          className={`text-base sm:text-lg font-mono font-semibold tracking-wide transition-colors shrink-0 hover:underline underline-offset-2 flex items-baseline gap-0.5 ${
+            isDarkMode ? 'text-ink hover:text-accent' : 'text-slate-800 hover:text-accent'
           }`}
         >
-          ulisses
+          <span className="text-accent">$</span> ulisses@molina <span className={isDarkMode ? 'text-ink-dim' : 'text-slate-500'}>~</span>
         </a>
 
-        {/* Desktop: inline links + resume + theme */}
+        {/* Desktop: inline links + resume + clock + theme color + light/dark */}
         <div className="hidden md:flex flex-wrap items-center justify-center gap-6 sm:gap-8">
           {navLinks.map(({ href, label }) => (
             <a key={href} href={href} className={linkClass(href.slice(1))}>
@@ -65,12 +73,36 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '' }
           <a
             href="/UlissesResume%20(5).pdf"
             download="UlissesResume.pdf"
-            className={`text-sm font-medium transition-colors ${
+            className={`text-sm font-medium transition-colors px-2 py-1 rounded hover:underline underline-offset-2 ${
               isDarkMode ? 'text-ink-muted hover:text-accent' : 'text-slate-600 hover:text-accent'
             }`}
           >
             Resume
           </a>
+          <span
+            className={`text-xs font-mono tabular-nums ${
+              isDarkMode ? 'text-ink-dim' : 'text-slate-400'
+            }`}
+            aria-hidden
+          >
+            {clockStr}
+          </span>
+          {onThemeChange && (
+            <select
+              value={theme}
+              onChange={(e) => onThemeChange(e.target.value)}
+              className={`text-xs font-mono rounded px-2 py-1 border bg-transparent cursor-pointer ${
+                isDarkMode
+                  ? 'border-surface-border text-ink-muted hover:text-accent focus:border-accent'
+                  : 'border-slate-300 text-slate-600 hover:text-accent focus:border-accent'
+              }`}
+              aria-label="Accent theme"
+            >
+              {THEMES.map((t) => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+          )}
           <button
             onClick={onToggleTheme}
             className={`p-1.5 rounded transition-colors ${
@@ -84,8 +116,25 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '' }
           </button>
         </div>
 
-        {/* Mobile: hamburger + theme, then dropdown */}
+        {/* Mobile: clock + theme selector + hamburger */}
         <div className="flex md:hidden items-center gap-2">
+          <span className={`text-xs font-mono tabular-nums ${isDarkMode ? 'text-ink-dim' : 'text-slate-400'}`} aria-hidden>
+            {clockStr}
+          </span>
+          {onThemeChange && (
+            <select
+              value={theme}
+              onChange={(e) => onThemeChange(e.target.value)}
+              className={`text-xs font-mono rounded px-2 py-1 border bg-transparent ${
+                isDarkMode ? 'border-surface-border text-ink-muted' : 'border-slate-300 text-slate-600'
+              }`}
+              aria-label="Accent theme"
+            >
+              {THEMES.map((t) => (
+                <option key={t.id} value={t.id}>{t.label}</option>
+              ))}
+            </select>
+          )}
           <button
             onClick={onToggleTheme}
             className={`p-2 rounded transition-colors ${
@@ -120,7 +169,7 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '' }
       >
         <div
           className={`border-t py-4 px-4 flex flex-col gap-0.5 ${
-            isDarkMode ? 'border-surface-border bg-surface-bg/98' : 'border-slate-200 bg-slate-50/98'
+            isDarkMode ? 'border-surface-border bg-surface-bg/98' : 'border-slate-300 bg-slate-100/98'
           }`}
         >
           {navLinks.map(({ href, label }) => (
@@ -139,7 +188,7 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '' }
             href="/UlissesResume%20(5).pdf"
             download="UlissesResume.pdf"
             onClick={closeMobile}
-            className={`py-3 px-3 rounded-lg text-base font-medium transition-colors ${
+            className={`py-3 px-3 rounded-lg text-base font-medium transition-colors hover:underline underline-offset-2 ${
               isDarkMode ? 'text-ink-muted hover:text-accent hover:bg-white/5' : 'text-slate-600 hover:text-accent hover:bg-slate-200/60'
             }`}
           >

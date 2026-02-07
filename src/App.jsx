@@ -5,27 +5,39 @@ import Terminal from './components/Terminal';
 import ProjectCard from './components/ProjectCard';
 import RecentCommitsCard from './components/RecentCommitsCard';
 
-const UPTIME_START = new Date('2025-01-15');
-
-function getUptimeDays(start) {
-  const now = new Date();
-  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
-}
-
 const GITHUB_USER = 'UlissesMolina';
+
+function formatSessionTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const s = totalSeconds % 60;
+  const m = Math.floor(totalSeconds / 60) % 60;
+  const h = Math.floor(totalSeconds / 3600);
+  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
 
 function App() {
   const sectionRefs = useRef([]);
+  const sessionStartRef = useRef(Date.now());
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [time, setTime] = useState(() => new Date());
   const [commitsThisWeek, setCommitsThisWeek] = useState(null);
   const [expandedExpIndex, setExpandedExpIndex] = useState(null);
   const [activeSection, setActiveSection] = useState('');
-  const [terminalFullscreen, setTerminalFullscreen] = useState(false);
+  const [loadingBarActive, setLoadingBarActive] = useState(false);
+  const [theme, setTheme] = useState('coral');
+  const [konamiMessage, setKonamiMessage] = useState(null);
 
   const scrollToSection = (id) => {
+    setLoadingBarActive(true);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    if (!loadingBarActive) return;
+    const t = setTimeout(() => setLoadingBarActive(false), 500);
+    return () => clearTimeout(t);
+  }, [loadingBarActive]);
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000);
@@ -70,23 +82,33 @@ function App() {
   }, []);
 
 
-  // Fullscreen: block page scroll, Escape to close
-  useEffect(() => {
-    if (!terminalFullscreen) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    const onKey = (e) => { if (e.key === 'Escape') setTerminalFullscreen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [terminalFullscreen]);
-
-  // Apply theme to document
+  // Apply theme to document (dark + accent theme)
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  // Konami code: Up Up Down Down Left Right Left Right B A
+  const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+  useEffect(() => {
+    let idx = 0;
+    const onKey = (e) => {
+      const key = e.key.toLowerCase() === 'a' ? 'a' : e.key;
+      if (key === KONAMI[idx]) {
+        idx += 1;
+        if (idx === KONAMI.length) {
+          setKonamiMessage("🎮 Konami code! You're a real one.");
+          idx = 0;
+        }
+      } else {
+        idx = 0;
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // Scroll animations for sections
   useEffect(() => {
@@ -129,11 +151,11 @@ function App() {
       logo: 'OCV', // initials or logo URL
       tech: ['JSON', 'iOS', 'Android', 'QC'],
       bullets: [
+        '• Released and maintained iOS and Android apps on the App Store and Google Play Console, ensuring smooth deployment and version tracking',
         '• Built and configured client mobile apps using OCV\'s proprietary platform and formatted JSON structures',
         '• Implemented client requests by updating app content, configurations, and feature settings through internal tools',
         '• Performed quality control (QC) testing to ensure app functionality and UI consistency before release',
         '• Collaborated with developers, operations, and graphics teams to manage app updates and production issues',
-        '• Released and maintained iOS and Android apps on the App Store and Google Play Console, ensuring smooth deployment and version tracking',
       ],
     },
     {
@@ -147,8 +169,8 @@ function App() {
         '• Developed and maintained application features using React and TypeScript in a production codebase',
         '• Implemented and updated Firebase-backed backend logic and API endpoints to support application functionality',
         '• Worked with authentication, configuration data, and state management across frontend and backend',
-        '• Fixed bugs and improved code quality by debugging React hooks and shared application state',
         '• Collaborated with engineers through Jira tickets, pull requests, and code reviews in an agile workflow',
+        '• Fixed bugs and improved code quality by debugging React hooks and shared application state',
       ],
     },
   ];
@@ -182,13 +204,9 @@ while True:
       media: { type: 'video', url: '/portfolio.mp4' },
       featured: false,
       snippet: `export default function App() {
-  const [terminalFullscreen, setTerminalFullscreen] = useState(false)
   return (
     <>
-      <Terminal
-        onNavigateToSection={scrollToSection}
-        onEnterFullscreen={() => setTerminalFullscreen(true)}
-      />
+      <Terminal onNavigateToSection={scrollToSection} />
       <Section $="work" />
       <Section $="projects" />
       <Section $="activity" />
@@ -200,49 +218,28 @@ while True:
 
   return (
     <div className={`relative min-h-screen font-sans transition-colors duration-300 ${
-      isDarkMode ? 'bg-surface-grid' : 'bg-slate-100'
+      isDarkMode ? 'bg-surface-grid' : 'bg-slate-200/80'
     }`}>
-      <NavBar isDarkMode={isDarkMode} onToggleTheme={toggleTheme} activeSection={activeSection} />
+      {loadingBarActive && <div className="load-bar" aria-hidden="true" />}
+      <NavBar
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        activeSection={activeSection}
+        time={time}
+        theme={theme}
+        onThemeChange={setTheme}
+      />
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-5 z-10 flex flex-col">
         {/* Terminal hero — minimal gap so sections feel like continuous output */}
         <header id="about" className="pt-12 pb-6 scroll-mt-[5rem]">
-          <div
-            className={terminalFullscreen
-              ? 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75'
-              : 'w-full max-w-3xl mx-auto'
-            }
-            onClick={terminalFullscreen ? () => setTerminalFullscreen(false) : undefined}
-          >
-            <div
-              className={terminalFullscreen
-                ? 'w-full max-w-3xl max-h-[80vh] flex flex-col rounded-xl overflow-hidden border border-surface-border shadow-2xl bg-surface-bg'
-                : 'w-full'
-              }
-              onClick={terminalFullscreen ? (e) => e.stopPropagation() : undefined}
-            >
-              {terminalFullscreen && (
-                <div className="flex items-center justify-end px-4 py-2 border-b border-surface-border bg-surface-card/80">
-                  <button
-                    type="button"
-                    onClick={() => setTerminalFullscreen(false)}
-                    className="text-ink-muted hover:text-ink font-mono text-sm"
-                    aria-label="Close fullscreen"
-                  >
-                    esc
-                  </button>
-                </div>
-              )}
-              <div className={terminalFullscreen ? 'flex-1 min-h-0 flex flex-col' : ''}>
-                <Terminal
-                  isDarkMode={isDarkMode}
-                  onNavigateToSection={scrollToSection}
-                  onEnterFullscreen={() => setTerminalFullscreen(true)}
-                  onExitFullscreen={() => setTerminalFullscreen(false)}
-                  isFullscreen={terminalFullscreen}
-                />
-              </div>
-            </div>
+          <div className="w-full max-w-3xl mx-auto">
+            <Terminal
+              isDarkMode={isDarkMode}
+              onNavigateToSection={scrollToSection}
+              konamiMessage={konamiMessage}
+              onKonamiShown={() => setKonamiMessage(null)}
+            />
             {/* Mobile: tap commands so small screens can navigate without typing */}
             <div className="md:hidden mt-3 flex flex-wrap gap-2 justify-center">
               {[
@@ -278,12 +275,6 @@ while True:
             </div>
           </div>
         </header>
-        {/* Visual connector: terminal output flows into sections */}
-        <div className="w-full max-w-3xl mx-auto" aria-hidden>
-          <div className={`h-6 w-px ml-[0.6rem] rounded-full animate-connector-flow ${
-            isDarkMode ? 'bg-gradient-to-b from-accent/50 to-transparent' : 'bg-gradient-to-b from-accent/40 to-transparent'
-          }`} />
-        </div>
         <main className="flex flex-col gap-16 sm:gap-20">
           {/* Work — terminal-style header then timeline */}
           <section
@@ -298,25 +289,27 @@ while True:
               </div>
               <div className={`pl-4 mt-0.5 ${isDarkMode ? 'text-ink-muted' : 'text-slate-500'}`}>→ work</div>
             </div>
-            <div className={`w-full border-t mb-8 ${isDarkMode ? 'border-surface-border' : 'border-slate-200'}`} style={{ maxWidth: '32rem' }} />
-            <div className="w-full max-w-2xl relative">
-              <div className={`absolute left-[7px] top-4 bottom-4 w-0.5 rounded-full ${
-                isDarkMode ? 'bg-accent/40' : 'bg-accent/30'
-              }`} aria-hidden />
+            <div className={`w-full border-t mb-8 ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`} style={{ maxWidth: '32rem' }} />
+            <div className="w-full max-w-2xl">
               {experiences.map((exp, index) => {
                 const isExpanded = expandedExpIndex === index;
                 const hasMore = exp.bullets.length > 1;
+                const isLast = index === experiences.length - 1;
                 return (
-                  <div key={index} className="group/exp relative flex items-start gap-5 pb-10 last:pb-0">
-                    <div className="relative z-10 flex w-4 flex-shrink-0 items-center justify-center pt-1">
-                      <div className={`h-4 w-4 rounded-full border-2 animate-dot-pulse transition-all duration-200 group-hover/exp:scale-125 ${
+                  <div key={index} className="group/exp relative flex items-stretch gap-5 pb-10 last:pb-0">
+                    {/* Dot column: line runs behind; dot on top so line appears to connect through */}
+                    <div className="relative flex w-4 flex-shrink-0 flex-col items-center pt-1">
+                      <div className={`relative z-[2] h-4 w-4 rounded-full border-2 animate-dot-pulse transition-all duration-200 group-hover/exp:scale-125 ${
                         isDarkMode ? 'bg-accent border-accent/60' : 'bg-accent border-accent/70'
                       }`} />
+                      {!isLast && (
+                        <div className="timeline-connector z-0" aria-hidden />
+                      )}
                     </div>
                     <div className={`flex-1 rounded-lg px-4 py-3 transition-all duration-200
                       ${isDarkMode
                         ? 'bg-surface-card border border-surface-border hover:border-accent/30'
-                        : 'bg-white/80 border border-slate-200 hover:border-accent/40'
+                        : 'bg-slate-100 border border-slate-300 hover:border-accent/40'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -404,28 +397,17 @@ while True:
               </div>
               <div className={`pl-4 mt-0.5 ${isDarkMode ? 'text-ink-muted' : 'text-slate-500'}`}>→ projects</div>
             </div>
-            <div className={`w-full border-t mb-8 ${isDarkMode ? 'border-surface-border' : 'border-slate-200'}`} style={{ maxWidth: '32rem' }} />
-            <div className="flex flex-col gap-6 w-full max-w-3xl">
-              {projects.filter(p => p.featured).map((project, index) => (
+            <div className={`w-full border-t mb-8 ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`} style={{ maxWidth: '32rem' }} />
+            <div className="grid gap-5 w-full max-w-3xl grid-cols-1 sm:grid-cols-2">
+              {projects.map((project, index) => (
                 <ProjectCard
-                  key={`f-${index}`}
+                  key={index}
                   project={project}
                   isDarkMode={isDarkMode}
-                  roundedClass="rounded-xl"
-                  featured={true}
+                  roundedClass="rounded-lg"
+                  featured={project.featured}
                 />
               ))}
-              <div className="grid gap-5 grid-cols-1 sm:grid-cols-2">
-                {projects.filter(p => !p.featured).map((project, index) => (
-                  <ProjectCard
-                    key={index}
-                    project={project}
-                    isDarkMode={isDarkMode}
-                    roundedClass="rounded-lg"
-                    featured={false}
-                  />
-                ))}
-              </div>
             </div>
           </section>
           {/* Recent activity — styled as terminal log inside card */}
@@ -441,83 +423,40 @@ while True:
               </div>
               <div className={`pl-4 mt-0.5 ${isDarkMode ? 'text-ink-muted' : 'text-slate-500'}`}>→ activity</div>
             </div>
-            <div className={`w-full border-t mb-6 ${isDarkMode ? 'border-surface-border' : 'border-slate-200'}`} style={{ maxWidth: '32rem' }} />
+            <div className={`w-full border-t mb-6 ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`} style={{ maxWidth: '32rem' }} />
             <div className="w-full max-w-xl">
-              <RecentCommitsCard isDarkMode={isDarkMode} roundedClass="rounded-lg" />
+              <RecentCommitsCard isDarkMode={isDarkMode} theme={theme} roundedClass="rounded-lg" />
             </div>
           </section>
         </main>
-        {/* Contact — terminal-style header */}
+        {/* Footer — status and contact in separate terminal-style blocks */}
         <footer
           id="contact"
-          className={`w-full py-16 mt-8 flex flex-col items-center gap-8 border-t transition-colors scroll-mt-[5rem] ${
-            isDarkMode ? 'border-surface-border' : 'border-slate-200'
+          className={`w-full py-16 mt-8 flex flex-col items-center gap-10 border-t transition-colors scroll-mt-[5rem] ${
+            isDarkMode ? 'border-surface-border' : 'border-slate-300'
           }`}
         >
-          <div className={`font-mono text-sm sm:text-base text-center mb-2 ${isDarkMode ? 'text-ink' : 'text-slate-800'}`}>
-            <div className="flex items-baseline justify-center gap-2">
-              <span className="text-accent select-none">$</span>
-              <span>open contact.txt</span>
+          <div className={`w-full max-w-md font-mono text-sm sm:text-base ${isDarkMode ? 'text-ink-muted' : 'text-slate-600'}`}>
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-accent select-none">&gt;</span>
+              <span className={isDarkMode ? 'text-ink' : 'text-slate-800'}>status</span>
             </div>
-            <div className={`pl-4 mt-0.5 ${isDarkMode ? 'text-ink-muted' : 'text-slate-500'}`}>→ contact</div>
+            <p className="pl-4 mb-6">
+              Currently seeking Summer 2026 Software Engineering Internships.
+            </p>
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-accent select-none">&gt;</span>
+              <span className={isDarkMode ? 'text-ink' : 'text-slate-800'}>contact</span>
+            </div>
+            <div className="pl-4 space-y-1.5">
+              <p>Email: <a href="mailto:umolina2005@gmail.com" className={`font-medium hover:underline ${isDarkMode ? 'text-accent hover:text-accent-light' : 'text-accent hover:text-accent-dark'}`}>umolina2005@gmail.com</a></p>
+              <p>GitHub: <a href="https://github.com/UlissesMolina" target="_blank" rel="noopener noreferrer" className={`font-medium hover:underline ${isDarkMode ? 'text-accent hover:text-accent-light' : 'text-accent hover:text-accent-dark'}`}>github.com/UlissesMolina</a></p>
+              <p>LinkedIn: <a href="https://www.linkedin.com/in/ulissesmolina" target="_blank" rel="noopener noreferrer" className={`font-medium hover:underline ${isDarkMode ? 'text-accent hover:text-accent-light' : 'text-accent hover:text-accent-dark'}`}>linkedin.com/in/ulissesmolina</a></p>
+              <p>Resume: <a href="/UlissesResume%20(5).pdf" download="UlissesResume.pdf" className={`font-medium hover:underline ${isDarkMode ? 'text-accent hover:text-accent-light' : 'text-accent hover:text-accent-dark'}`}>Resume (PDF)</a></p>
+            </div>
           </div>
-          <div className={`w-full border-t mb-8 max-w-md ${isDarkMode ? 'border-surface-border' : 'border-slate-200'}`} />
-          <p className={`font-mono text-sm sm:text-base text-center max-w-md transition-colors ${
-            isDarkMode ? 'text-ink-muted' : 'text-slate-600'
-          }`}>
-            Available for part-time work.
-            <br />
-            <span className={isDarkMode ? 'text-ink' : 'text-slate-800'}>Let&apos;s build something.</span>
-          </p>
-          <a
-            href="mailto:umolina2005@gmail.com"
-            className={`text-lg sm:text-xl font-medium transition-colors hover:underline ${
-              isDarkMode ? 'text-accent hover:text-accent-light' : 'text-accent hover:text-accent-dark'
-            }`}
-          >
-            umolina2005@gmail.com
-          </a>
-          <div className="font-mono flex flex-col items-center gap-2 text-base sm:text-lg">
-            <a
-              href="https://github.com/UlissesMolina"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`flex items-center gap-2 transition-colors hover:translate-x-1 ${
-                isDarkMode ? 'text-ink-muted hover:text-accent' : 'text-slate-500 hover:text-accent'
-              }`}
-              aria-label="Open GitHub"
-            >
-              <span className="text-accent select-none">$</span>
-              <span>open github</span>
-            </a>
-            <a
-              href="https://www.linkedin.com/in/ulissesmolina"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`flex items-center gap-2 transition-colors hover:translate-x-1 ${
-                isDarkMode ? 'text-ink-muted hover:text-accent' : 'text-slate-500 hover:text-accent'
-              }`}
-              aria-label="Connect on LinkedIn"
-            >
-              <span className="text-accent select-none">$</span>
-              <span>connect linkedin</span>
-            </a>
-            <a
-              href="/UlissesResume%20(5).pdf"
-              download="UlissesResume.pdf"
-              className={`flex items-center gap-2 transition-colors hover:translate-x-1 ${
-                isDarkMode ? 'text-ink-muted hover:text-accent' : 'text-slate-500 hover:text-accent'
-              }`}
-              aria-label="View resume"
-            >
-              <span className="text-accent select-none">$</span>
-              <span>view resume</span>
-            </a>
-          </div>
-          <span className={`text-[10px] font-mono tabular-nums transition-colors ${
-            isDarkMode ? 'text-ink-dim' : 'text-slate-400'
-          }`} title="Easter egg">
-            Up {getUptimeDays(UPTIME_START)}d · {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
+          <span className={`text-[10px] font-mono tabular-nums transition-colors ${isDarkMode ? 'text-ink-dim' : 'text-slate-400'}`} title="Visitor session">
+            Session {formatSessionTime(time.getTime() - sessionStartRef.current)} · {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
           </span>
         </footer>
       </div>

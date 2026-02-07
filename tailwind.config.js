@@ -12,8 +12,8 @@ export default {
       },
       colors: {
         accent: {
-          DEFAULT: '#ff6b35',
-          light: '#ff8c5a',
+          DEFAULT: 'var(--accent, #ff6b35)',
+          light: 'var(--accent-light, #ff8c5a)',
           dark: '#e55a2b',
         },
         surface: {

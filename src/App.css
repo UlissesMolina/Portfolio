@@ -2,6 +2,25 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Accent themes (data-theme set on root from App) */
+:root,
+[data-theme="coral"] {
+  --accent: #ff6b35;
+  --accent-light: #ff8c5a;
+}
+[data-theme="matrix"] {
+  --accent: #00ff41;
+  --accent-light: #39ff14;
+}
+[data-theme="dracula"] {
+  --accent: #bd93f9;
+  --accent-light: #d4b3ff;
+}
+[data-theme="monokai"] {
+  --accent: #a6e22e;
+  --accent-light: #c4f042;
+}
+
 /* Scroll margin so fixed nav doesn't cover section titles */
 section[id] {
   scroll-margin-top: 5.5rem;
@@ -47,6 +66,24 @@ section[id] {
   animation: dot-pulse 2s ease-in-out infinite;
 }
 
+/* Timeline connector line — thin strip behind dots; extends into gap so it reaches the next circle */
+.timeline-connector {
+  width: 2px;
+  min-height: 4rem;
+  margin-top: -0.25rem; /* overlap into dot so line runs under it */
+  margin-bottom: -15rem; /* extend into gap below row */
+  padding-bottom: 2.5rem; /* extra height so line reaches second dot */
+  flex: 1 1 0;
+  border-radius: 9999px;
+  background-color: var(--accent, #ff6b35);
+  background: linear-gradient(
+    to bottom,
+    var(--accent, #ff6b35) 0%,
+    color-mix(in srgb, var(--accent, #ff6b35) 45%, transparent) 100%
+  );
+  opacity: 0.85;
+}
+
 /* Expandable bullets */
 .expandable-content {
   display: grid;
@@ -73,11 +110,17 @@ section[id] {
   background-size: 48px 48px;
 }
 
-/* Terminal-to-section connector: subtle flow */
-@keyframes terminal-connector-flow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+/* Section-loading bar (uses --accent when set) */
+@keyframes load-bar {
+  from { width: 0%; }
+  to { width: 100%; }
 }
-.animate-connector-flow {
-  animation: terminal-connector-flow 2.5s ease-in-out infinite;
+.load-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent, #ff6b35);
+  animation: load-bar 0.45s ease-out forwards;
+  z-index: 50;
 }

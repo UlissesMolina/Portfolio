@@ -4,11 +4,25 @@ import { FaExternalLinkAlt } from 'react-icons/fa';
 const GITHUB_USER = 'UlissesMolina';
 const COMMITS_PER_PAGE = 5;
 
-// Theme-aligned colors for language bar (coral/orange/amber — no blue)
-const LANGUAGE_COLORS = [
-  '#ff6b35', '#fdba74', '#ea580c', '#f59e0b', '#d97706',
-  '#fb923c', '#f97316', '#c2410c', '#9a3412', '#7c2d12',
-];
+// Language bar: distinct shades per theme so segments are easy to tell apart
+const LANGUAGE_COLORS_BY_THEME = {
+  coral: [
+    '#ff6b35', '#ea580c', '#f59e0b', '#dc2626', '#d97706',
+    '#c2410c', '#b45309', '#9a3412', '#7c2d12', '#78350f',
+  ],
+  matrix: [
+    '#00ff41', '#22c55e', '#16a34a', '#15803d', '#0d9488',
+    '#0f766e', '#0d3d0d', '#14532d', '#052e16', '#064e3b',
+  ],
+  dracula: [
+    '#bd93f9', '#a855f7', '#8b5cf6', '#c084fc', '#7c3aed',
+    '#ec4899', '#6d28d9', '#be185d', '#4c1d95', '#9d174d',
+  ],
+  monokai: [
+    '#a6e22e', '#84cc16', '#22c55e', '#0d9488', '#16a34a',
+    '#15803d', '#166534', '#0f766e', '#14532d', '#064e3b',
+  ],
+};
 
 function truncateMessage(msg, maxLen = 40) {
   if (!msg || msg.length <= maxLen) return msg || '';
@@ -25,7 +39,8 @@ function formatLogDate(date) {
   return `${y}-${m}-${d} ${h}:${min}`;
 }
 
-export default function RecentCommitsCard({ isDarkMode, roundedClass = 'rounded-xl', cardTier = 'tertiary' }) {
+export default function RecentCommitsCard({ isDarkMode, theme = 'coral', roundedClass = 'rounded-xl', cardTier = 'tertiary' }) {
+  const languageColors = LANGUAGE_COLORS_BY_THEME[theme] ?? LANGUAGE_COLORS_BY_THEME.coral;
   const [commits, setCommits] = useState([]);
   const [languages, setLanguages] = useState([]); // { name, percentage, color }
   const [hoveredLang, setHoveredLang] = useState(null); // for tooltip
@@ -133,10 +148,9 @@ export default function RecentCommitsCard({ isDarkMode, roundedClass = 'rounded-
             const total = Object.values(langData).reduce((a, b) => a + b, 0);
             if (total > 0) {
               const entries = Object.entries(langData)
-                .map(([name, bytes], i) => ({
+                .map(([name, bytes]) => ({
                   name,
                   percentage: Math.round((bytes / total) * 100),
-                  color: LANGUAGE_COLORS[i % LANGUAGE_COLORS.length],
                 }))
                 .sort((a, b) => b.percentage - a.percentage);
               setLanguages(entries);
@@ -164,11 +178,11 @@ export default function RecentCommitsCard({ isDarkMode, roundedClass = 'rounded-
   return (
     <div
       className={`w-full ${roundedClass} overflow-hidden font-mono text-sm transition-colors duration-300 ${
-        isDarkMode ? 'bg-surface-card/60 border border-surface-border' : 'bg-white/60 border border-slate-200'
+        isDarkMode ? 'bg-surface-card/60 border border-surface-border' : 'bg-slate-100/90 border border-slate-300'
       }`}
     >
       {/* Terminal log separator */}
-      <div className={`${padX} pt-3 border-t ${isDarkMode ? 'border-surface-border' : 'border-slate-200'}`}>
+      <div className={`${padX} pt-3 border-t ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`}>
         <div className={`text-xs tracking-wider ${messageColor}`}>
           ───────────────────────────────────────
         </div>
@@ -213,7 +227,7 @@ export default function RecentCommitsCard({ isDarkMode, roundedClass = 'rounded-
       </div>
 
       {/* View on GitHub + language bar */}
-      <div className={`${padX} pb-3 pt-1 border-t ${isDarkMode ? 'border-surface-border' : 'border-slate-200'}`}>
+      <div className={`${padX} pb-3 pt-1 border-t ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`}>
         <a
           href={repoUrl}
           target="_blank"
@@ -226,13 +240,13 @@ export default function RecentCommitsCard({ isDarkMode, roundedClass = 'rounded-
         <div className="mt-2 relative">
           <div className="flex h-1.5 w-full overflow-hidden rounded-full">
             {languages.length > 0 ? (
-              languages.map((lang) => (
+              languages.map((lang, i) => (
                 <div
                   key={lang.name}
-                  className="min-h-full transition-opacity hover:opacity-100 cursor-default"
+                  className="min-h-full transition-colors hover:opacity-100 cursor-default"
                   style={{
                     width: `${lang.percentage}%`,
-                    backgroundColor: lang.color,
+                    backgroundColor: languageColors[i % languageColors.length],
                     opacity: 0.85,
                   }}
                   onMouseEnter={() => setHoveredLang(lang)}
@@ -246,7 +260,7 @@ export default function RecentCommitsCard({ isDarkMode, roundedClass = 'rounded-
           {hoveredLang && (
             <div
               className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 text-xs font-medium whitespace-nowrap rounded z-20 ${
-                isDarkMode ? 'bg-surface-card text-ink border border-surface-border' : 'bg-slate-800 text-slate-100 border border-slate-200'
+                isDarkMode ? 'bg-surface-card text-ink border border-surface-border' : 'bg-slate-800 text-slate-100 border border-slate-300'
               }`}
             >
               {hoveredLang.name} {hoveredLang.percentage}%
