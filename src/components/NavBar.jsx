@@ -29,7 +29,6 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
 
   const closeMobile = () => setMobileOpen(false);
 
-  // Close on escape and when clicking a link (scroll)
   useEffect(() => {
     if (!mobileOpen) return;
     const onKey = (e) => { if (e.key === 'Escape') closeMobile(); };
@@ -37,7 +36,6 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
     return () => window.removeEventListener('keydown', onKey);
   }, [mobileOpen]);
 
-  // Prevent body scroll when menu open on mobile
   useEffect(() => {
     if (mobileOpen) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
@@ -63,7 +61,6 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
           <span className="text-accent">$</span> ulisses@molina <span className={isDarkMode ? 'text-ink-dim' : 'text-slate-500'}>~</span>
         </a>
 
-        {/* Desktop: inline links + resume + clock + theme color + light/dark */}
         <div className="hidden md:flex flex-wrap items-center justify-center gap-6 sm:gap-8">
           {navLinks.map(({ href, label }) => (
             <a key={href} href={href} className={linkClass(href.slice(1))}>
@@ -116,7 +113,6 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
           </button>
         </div>
 
-        {/* Mobile: theme selector + light/dark + hamburger (no clock to keep menu visible) */}
         <div className="flex md:hidden items-center gap-2">
           {onThemeChange && (
             <select
@@ -158,7 +154,6 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
         </div>
       </div>
 
-      {/* Mobile dropdown */}
       <div
         className={`md:hidden overflow-hidden transition-[max-height] duration-300 ease-out ${
           mobileOpen ? 'max-h-64' : 'max-h-0'

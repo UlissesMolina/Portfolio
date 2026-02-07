@@ -4,7 +4,6 @@ import { FaExternalLinkAlt } from 'react-icons/fa';
 const GITHUB_USER = 'UlissesMolina';
 const COMMITS_PER_PAGE = 5;
 
-// Language bar: distinct shades per theme so segments are easy to tell apart
 const LANGUAGE_COLORS_BY_THEME = {
   coral: [
     '#ff6b35', '#ea580c', '#f59e0b', '#dc2626', '#d97706',
@@ -57,7 +56,6 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
       let lastError = null;
 
       try {
-        // Try repos (match workspace name first, then common names)
         const reposToTry = ['personal-portflio', 'Portfolio', 'Tiger-Scheduler-Course-Auto-Register-Tool'];
         let list = [];
         let repo = reposToTry[0];
@@ -103,7 +101,6 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
           return;
         }
 
-        // Build commit list and fetch stats (additions/deletions) per commit
         const baseList = list.slice(0, COMMITS_PER_PAGE);
         const withStats = await Promise.all(
           baseList.map(async (c) => {
@@ -137,7 +134,6 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
 
         if (!cancelled) setCommits(withStats);
 
-        // Fetch repo languages (one extra request)
         try {
           const langRes = await fetch(
             `https://api.github.com/repos/${GITHUB_USER}/${repo}/languages`,
@@ -181,14 +177,12 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
         isDarkMode ? 'bg-surface-card/60 border border-surface-border' : 'bg-slate-100/90 border border-slate-300'
       }`}
     >
-      {/* Terminal log separator */}
       <div className={`${padX} pt-3 border-t ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`}>
         <div className={`text-xs tracking-wider ${messageColor}`}>
           ───────────────────────────────────────
         </div>
       </div>
 
-      {/* Log lines: [date time] message    +x / -y */}
       <div className={`${padX} py-3 space-y-1`}>
         {loading ? (
           <div className={messageColor}>Loading...</div>
@@ -221,12 +215,10 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
         )}
       </div>
 
-      {/* Watching footer */}
       <div className={`${padX} py-2 ${messageColor} text-xs`}>
         Watching for changes... (press Ctrl+C to stop)
       </div>
 
-      {/* View on GitHub + language bar */}
       <div className={`${padX} pb-3 pt-1 border-t ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`}>
         <a
           href={repoUrl}

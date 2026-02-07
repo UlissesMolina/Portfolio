@@ -44,7 +44,6 @@ function App() {
     return () => clearInterval(t);
   }, []);
 
-  // Live commit count for hero hook
   useEffect(() => {
     let cancelled = false;
     const weekAgo = new Date();
@@ -61,7 +60,6 @@ function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // Scroll spy for nav active state
   useEffect(() => {
     const ids = ['about', 'experience', 'projects', 'contact'];
     const observer = new IntersectionObserver(
@@ -82,7 +80,6 @@ function App() {
   }, []);
 
 
-  // Apply theme to document (dark + accent theme)
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
@@ -90,7 +87,6 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Konami code: Up Up Down Down Left Right Left Right B A
   const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
   useEffect(() => {
     let idx = 0;
@@ -99,7 +95,7 @@ function App() {
       if (key === KONAMI[idx]) {
         idx += 1;
         if (idx === KONAMI.length) {
-          setKonamiMessage("🎮 Konami code! You're a real one.");
+          setKonamiMessage(" No way you tried the Konami code.");
           idx = 0;
         }
       } else {
@@ -110,7 +106,6 @@ function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Scroll animations for sections
   useEffect(() => {
     const observerOptions = {
       threshold: 0.1,
@@ -231,7 +226,6 @@ while True:
       />
 
       <div className="relative max-w-4xl mx-auto px-4 sm:px-5 z-10 flex flex-col">
-        {/* Terminal hero — minimal gap so sections feel like continuous output */}
         <header id="about" className="pt-12 pb-6 scroll-mt-[5rem]">
           <div className="w-full max-w-3xl mx-auto">
             <Terminal
@@ -240,7 +234,6 @@ while True:
               konamiMessage={konamiMessage}
               onKonamiShown={() => setKonamiMessage(null)}
             />
-            {/* Mobile: tap commands so small screens can navigate without typing */}
             <div className="md:hidden mt-3 flex flex-wrap gap-2 justify-center">
               {[
                 { label: 'work', id: 'experience' },
@@ -276,7 +269,6 @@ while True:
           </div>
         </header>
         <main className="flex flex-col gap-16 sm:gap-20">
-          {/* Work — terminal-style header then timeline */}
           <section
             id="experience"
             ref={el => sectionRefs.current[0] = el}
@@ -297,7 +289,6 @@ while True:
                 const isLast = index === experiences.length - 1;
                 return (
                   <div key={index} className="group/exp relative flex items-stretch gap-5 pb-10 last:pb-0">
-                    {/* Dot column: line runs behind; dot on top so line appears to connect through */}
                     <div className="relative flex w-4 flex-shrink-0 flex-col items-center pt-1">
                       <div className={`relative z-[2] h-4 w-4 rounded-full border-2 animate-dot-pulse transition-all duration-200 group-hover/exp:scale-125 ${
                         isDarkMode ? 'bg-accent border-accent/60' : 'bg-accent border-accent/70'
@@ -342,7 +333,7 @@ while True:
                               <span
                                 key={t}
                                 className={`text-[10px] px-2 py-0.5 rounded-full ${
-                                  isDarkMode ? 'bg-surface-border text-accent/90' : 'bg-accent/10 text-accent'
+                                  isDarkMode ? 'bg-accent/15 text-accent-light' : 'bg-accent/10 text-accent'
                                 }`}
                               >
                                 {t}
@@ -384,7 +375,6 @@ while True:
               })}
             </div>
           </section>
-          {/* Projects — terminal-style header */}
           <section
             id="projects"
             ref={el => sectionRefs.current[1] = el}
@@ -410,7 +400,6 @@ while True:
               ))}
             </div>
           </section>
-          {/* Recent activity — styled as terminal log inside card */}
           <section
             id="contributions"
             ref={el => sectionRefs.current[2] = el}
@@ -429,7 +418,6 @@ while True:
             </div>
           </section>
         </main>
-        {/* Footer — status and contact in separate terminal-style blocks */}
         <footer
           id="contact"
           className={`w-full py-16 mt-8 flex flex-col items-center gap-10 border-t transition-colors scroll-mt-[5rem] ${

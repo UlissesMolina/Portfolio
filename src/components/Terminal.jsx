@@ -4,7 +4,6 @@ const WELCOME = "Type 'help' to start.";
 const WHOAMI_OUTPUT = 'Ulisses Molina — Software Engineering Student';
 const ALIASES = { h: 'help', p: 'projects', s: 'skills', c: 'contact', r: 'resume' };
 
-// Commands that can be tab-completed (full names only; aliases complete to full name)
 const TAB_COMPLETE_COMMANDS = [
   'help', 'about', 'work', 'projects', 'activity', 'contact', 'open',
   'skills', 'resume', 'clear', 'whoami', 'ls', 'pwd', 'sudo', 'rm', 'connect', 'view',
@@ -12,12 +11,13 @@ const TAB_COMPLETE_COMMANDS = [
   'wordle', 'wordplay', 'puzzle',
 ];
 
-// 5-letter words for wordle easter egg (common, easy to guess)
 const WORDLE_WORDS = [
-  'crane', 'slice', 'wordy', 'theme', 'batch', 'light', 'might', 'first', 'could', 'would',
-  'right', 'think', 'other', 'their', 'there', 'these', 'about', 'which', 'great', 'after',
-  'where', 'every', 'never', 'world', 'still', 'while', 'place', 'point', 'thing', 'today',
-  'react', 'build', 'stack', 'debug', 'merge', 'patch', 'scope', 'query', 'fetch', 'parse',
+  'async', 'array', 'class', 'index', 'cache', 'token', 'route', 
+  'model', 'state', 'props', 'hooks', 'event', 'write', 'redis',
+  'nginx', 'linux', 'shell', 'admin', 'login', 'flask', 'image',
+  'table', 'field', 'forms', 'views', 'tests', 'setup','logic', 
+  'loops', 'atoms', 'nodes', 'bytes', 'flash', 'frame','posts',
+  'clone', 'drive', 'files', 'input', 'users', 'roles', 
 ];
 
 function getWordleFeedback(guess, target) {
@@ -59,9 +59,7 @@ const HELP_OUTPUT = `Available commands:
   Try: work   projects   open github   wordle
   Try some classic unix commands too (ls, pwd, sudo...)`;
 
-const ABOUT_OUTPUT = `Software engineering student who automates bureaucracy.
-Currently making Auburn's course registration suck less.
-Auburn SWE · Open to part-time work.`;
+const ABOUT_OUTPUT = `Software engineering at Auburn University. Sophomore. Open to summer 2026 internships.`;
 
 const PROJECTS = {
   'tiger-scheduler': `Tiger Scheduler Course Auto-Register Tool
@@ -152,9 +150,9 @@ LinkedIn: linkedin.com/in/ulissesmolina`;
     case 'exit':
       return `Nice try. You're here forever. (Just kidding — use the clear command.)`;
     case '^c':
-      return `Process killed... your boredom, hopefully.`;
+      return `Process killed...`;
     case 'chmod':
-      if (args[0] === '777') return `Giving everyone permissions to view my code. Bold move.`;
+      if (args[0] === '777') return `Giving everyone permissions to view my code. Interesting...`;
       return `Usage: chmod <mode> <file> (try chmod 777 for a surprise)`;
     case 'man': {
       const topic = args[0]?.toLowerCase() || '';
@@ -164,9 +162,9 @@ LinkedIn: linkedin.com/in/ulissesmolina`;
     }
     case 'git': {
       const sub = args[0]?.toLowerCase();
-      if (sub === 'gud') return `Already am. (github.com/UlissesMolina)`;
-      if (sub === 'blame') return `Blaming past me for this bug...`;
-      if (sub === 'push' && args[1] === '--force') return `Forcing my way into your company.`;
+      if (sub === 'gud') return `You dont think so? (github.com/UlissesMolina)`;
+      if (sub === 'blame') return `Blaming me for this bug...`;
+      if (sub === 'push' && args[1] === '--force') return `Forcing my way into your company... just kidding unless...`;
       if (sub === 'commit') return `The most common commit message in history.`;
       if (sub === 'log') return `Use the 'activity' section or GitHub for the real log.`;
       if (sub === 'rebase') return `Rewriting history... if only I could do this with my GPA.`;
@@ -179,7 +177,7 @@ LinkedIn: linkedin.com/in/ulissesmolina`;
       if (args[0] === 'install' && args[1] === 'social-life') return `Warning: Conflicts with software-engineering`;
       return `Usage: brew install <formula> (try brew install social-life)`;
     case 'npm':
-      if (args[0] === 'install' && (args[1] === 'girlfriend' || args[1] === 'motivation')) return `npm ERR! 404 Not Found. (Relatable.)`;
+      if (args[0] === 'install' && args[1] === 'motivation') return `npm ERR! 404 Not Found. (Relatable.)`;
       return `Usage: npm install <pkg>`;
     case 'ps':
       if (args[0] === 'aux') return `procrastination.exe   ...  running\nimposter-syndrome    ...  running\ncoffee-addiction      ...  running`;
@@ -226,9 +224,9 @@ LinkedIn: linkedin.com/in/ulissesmolina`;
       if (args[0]?.toLowerCase()?.includes('resume')) return `%PDF-1.4 garbage binary...\n\nUse the 'resume' command instead.`;
       return `cat: ${args[0] || 'missing file'}: No such file`;
     case 'nano':
-      return `Real developers use vim. (Start the editor war.)`;
+      return `Real developers use vim. Maybe you should too.`;
     case 'emacs':
-      return `Vim is better. Fight me.`;
+      return `Vim is better.`;
     case 'alias':
       if (args.join(' ').includes('please')) return `Politeness appreciated but not required.`;
       return `alias: usage alias name=value`;
@@ -238,7 +236,7 @@ LinkedIn: linkedin.com/in/ulissesmolina`;
     case 'wordle':
     case 'wordplay':
     case 'puzzle':
-      return null; /* handled in handleSubmit: starts inline game */
+      return null;
     default:
       return `Command not found: ${command}. Type 'help' for available commands.`;
   }
@@ -263,7 +261,6 @@ export default function Terminal({ isDarkMode, onNavigateToSection, konamiMessag
     inputRef.current?.focus();
   }, []);
 
-  // Short boot animation: first line already shown, then second line, then welcome
   useEffect(() => {
     const t1 = setTimeout(() => {
       setHistory((prev) => [...prev, { type: 'output', text: BOOT_LINE_2 }]);
@@ -280,7 +277,6 @@ export default function Terminal({ isDarkMode, onNavigateToSection, konamiMessag
     if (el) el.scrollTop = el.scrollHeight;
   }, [history]);
 
-  // Konami: append message to terminal when triggered from App
   useEffect(() => {
     if (!konamiMessage) return;
     setHistory((prev) => [...prev, { type: 'output', text: konamiMessage }]);
@@ -325,7 +321,6 @@ export default function Terminal({ isDarkMode, onNavigateToSection, konamiMessag
     const raw = input.trim();
     if (!raw) return;
 
-    // --- Wordle game active: treat input as guess or quit ---
     if (wordleGame) {
       const quit = /^(quit|exit|q)$/i.test(raw);
       if (quit) {
@@ -380,7 +375,6 @@ export default function Terminal({ isDarkMode, onNavigateToSection, konamiMessag
     const { command, args } = parseInput(raw);
     let output = execute(command, args);
 
-    // --- Start Wordle from command ---
     if ((command === 'wordle' || command === 'wordplay' || command === 'puzzle') && output == null) {
       const target = WORDLE_WORDS[Math.floor(Math.random() * WORDLE_WORDS.length)];
       setWordleGame({ target, attempts: 6, guesses: [] });

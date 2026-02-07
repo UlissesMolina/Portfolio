@@ -9,7 +9,6 @@ const TAG_ICONS = {
   TypeScript: SiTypescript,
 };
 
-// Simple syntax highlight: keywords + strings
 const KEYWORD_SET = new Set(['from', 'import', 'while', 'True', 'False', 'if', 'else', 'return', 'const', 'function', 'default', 'export', 'class', 'async', 'await']);
 const TOKEN_RE = /\b(from|import|while|True|False|if|else|return|const|function|default|export|class|async|await)\b|"([^"\\]|\\.)*"|'([^'\\]|\\.)*'/g;
 
