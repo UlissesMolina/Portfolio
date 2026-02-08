@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { FaMoon, FaSun, FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 const THEMES = [
   { id: 'coral', label: 'Coral' },
   { id: 'matrix', label: 'Matrix' },
   { id: 'dracula', label: 'Dracula' },
-  { id: 'monokai', label: 'Monokai' },
 ];
 
-export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', time, theme = 'coral', onThemeChange }) {
+export default function NavBar({ isDarkMode, activeSection = '', time, theme = 'coral', onThemeChange }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const clockStr = time ? time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : '--:--:--';
 
@@ -88,10 +87,10 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
             <select
               value={theme}
               onChange={(e) => onThemeChange(e.target.value)}
-              className={`text-xs font-mono rounded px-2 py-1 border bg-transparent cursor-pointer ${
+              className={`text-xs font-mono rounded px-2 py-1 border cursor-pointer ${
                 isDarkMode
-                  ? 'border-surface-border text-ink-muted hover:text-accent focus:border-accent'
-                  : 'border-slate-300 text-slate-600 hover:text-accent focus:border-accent'
+                  ? 'border-surface-border text-ink bg-surface-card hover:text-accent focus:border-accent'
+                  : 'border-slate-300 text-slate-800 bg-slate-100 hover:text-accent focus:border-accent'
               }`}
               aria-label="Accent theme"
             >
@@ -100,17 +99,6 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
               ))}
             </select>
           )}
-          <button
-            onClick={onToggleTheme}
-            className={`p-1.5 rounded transition-colors ${
-              isDarkMode
-                ? 'text-ink-muted hover:text-ink hover:bg-white/5'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/80'
-            }`}
-            aria-label="Toggle theme"
-          >
-            {isDarkMode ? <FaSun size={12} /> : <FaMoon size={12} />}
-          </button>
         </div>
 
         <div className="flex md:hidden items-center gap-2">
@@ -118,8 +106,8 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
             <select
               value={theme}
               onChange={(e) => onThemeChange(e.target.value)}
-              className={`text-xs font-mono rounded px-2 py-1 border bg-transparent ${
-                isDarkMode ? 'border-surface-border text-ink-muted' : 'border-slate-300 text-slate-600'
+              className={`text-xs font-mono rounded px-2 py-1 border ${
+                isDarkMode ? 'border-surface-border text-ink bg-surface-card' : 'border-slate-300 text-slate-800 bg-slate-100'
               }`}
               aria-label="Accent theme"
             >
@@ -128,17 +116,6 @@ export default function NavBar({ isDarkMode, onToggleTheme, activeSection = '', 
               ))}
             </select>
           )}
-          <button
-            onClick={onToggleTheme}
-            className={`p-2 rounded transition-colors ${
-              isDarkMode
-                ? 'text-ink-muted hover:text-ink hover:bg-white/5'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-200/80'
-            }`}
-            aria-label="Toggle theme"
-          >
-            {isDarkMode ? <FaSun size={14} /> : <FaMoon size={14} />}
-          </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className={`p-2 rounded transition-colors ${

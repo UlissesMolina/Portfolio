@@ -15,10 +15,6 @@ html {
   --accent: #bd93f9;
   --accent-light: #d4b3ff;
 }
-[data-theme="monokai"] {
-  --accent: #a6e22e;
-  --accent-light: #c4f042;
-}
 
 section[id] {
   scroll-margin-top: 5.5rem;

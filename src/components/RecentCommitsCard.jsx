@@ -17,10 +17,6 @@ const LANGUAGE_COLORS_BY_THEME = {
     '#bd93f9', '#a855f7', '#8b5cf6', '#c084fc', '#7c3aed',
     '#ec4899', '#6d28d9', '#be185d', '#4c1d95', '#9d174d',
   ],
-  monokai: [
-    '#a6e22e', '#84cc16', '#22c55e', '#0d9488', '#16a34a',
-    '#15803d', '#166534', '#0f766e', '#14532d', '#064e3b',
-  ],
 };
 
 function truncateMessage(msg, maxLen = 40) {

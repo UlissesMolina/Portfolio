@@ -84,7 +84,7 @@ function App() {
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme === 'monokai' ? 'coral' : theme);
   }, [theme]);
 
   const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
@@ -133,26 +133,7 @@ function App() {
     };
   }, []);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
   const experiences = [
-    {
-      company: 'OCV, LLC',
-      title: 'Part-Time Software Engineering Intern',
-      location: 'Opelika AL',
-      period: 'September 2025 - Present',
-      logo: 'OCV', // initials or logo URL
-      tech: ['JSON', 'iOS', 'Android', 'QC'],
-      bullets: [
-        '• Released and maintained iOS and Android apps on the App Store and Google Play Console, ensuring smooth deployment and version tracking',
-        '• Built and configured client mobile apps using OCV\'s proprietary platform and formatted JSON structures',
-        '• Implemented client requests by updating app content, configurations, and feature settings through internal tools',
-        '• Performed quality control (QC) testing to ensure app functionality and UI consistency before release',
-        '• Collaborated with developers, operations, and graphics teams to manage app updates and production issues',
-      ],
-    },
     {
       company: 'Room2Room Movers',
       title: 'Part-Time Software Engineering Intern',
@@ -166,6 +147,21 @@ function App() {
         '• Worked with authentication, configuration data, and state management across frontend and backend',
         '• Collaborated with engineers through Jira tickets, pull requests, and code reviews in an agile workflow',
         '• Fixed bugs and improved code quality by debugging React hooks and shared application state',
+      ],
+    },
+    {
+      company: 'OCV, LLC',
+      title: 'Part-Time Software Engineering Intern',
+      location: 'Opelika AL',
+      period: 'September 2025 - Present',
+      logo: 'OCV',
+      tech: ['JSON', 'iOS', 'Android', 'QC'],
+      bullets: [
+        '• Released and maintained iOS and Android apps on the App Store and Google Play Console, ensuring smooth deployment and version tracking',
+        '• Built and configured client mobile apps using OCV\'s proprietary platform and formatted JSON structures',
+        '• Implemented client requests by updating app content, configurations, and feature settings through internal tools',
+        '• Performed quality control (QC) testing to ensure app functionality and UI consistency before release',
+        '• Collaborated with developers, operations, and graphics teams to manage app updates and production issues',
       ],
     },
   ];
@@ -218,7 +214,6 @@ while True:
       {loadingBarActive && <div className="load-bar" aria-hidden="true" />}
       <NavBar
         isDarkMode={isDarkMode}
-        onToggleTheme={toggleTheme}
         activeSection={activeSection}
         time={time}
         theme={theme}
@@ -245,11 +240,7 @@ while True:
                   key={id}
                   type="button"
                   onClick={() => scrollToSection(id)}
-                  className={`font-mono text-xs px-3 py-2 rounded-md border transition-colors ${
-                    isDarkMode
-                      ? 'border-surface-border text-ink-muted hover:border-accent/50 hover:text-accent'
-                      : 'border-slate-300 text-slate-600 hover:border-accent hover:text-accent'
-                  }`}
+                  className="font-mono text-xs px-3 py-2 rounded-md border border-surface-border text-ink-muted hover:border-accent/50 hover:text-accent transition-colors"
                 >
                   $ {label}
                 </button>
@@ -257,14 +248,46 @@ while True:
               <button
                 type="button"
                 onClick={() => window.open('/UlissesResume%20(5).pdf', '_blank')}
-                className={`font-mono text-xs px-3 py-2 rounded-md border transition-colors ${
-                  isDarkMode
-                    ? 'border-surface-border text-ink-muted hover:border-accent/50 hover:text-accent'
-                    : 'border-slate-300 text-slate-600 hover:border-accent hover:text-accent'
-                }`}
+                className="font-mono text-xs px-3 py-2 rounded-md border border-surface-border text-ink-muted hover:border-accent/50 hover:text-accent transition-colors"
               >
                 $ resume
               </button>
+            </div>
+
+            <div className="max-w-3xl mx-auto mt-12 space-y-8">
+              <div className="bg-surface-bg border border-white/[0.03] rounded-lg p-8">
+                <h2 className="text-2xl font-bold text-ink mb-4">Ulisses Molina</h2>
+                <p className="text-ink-muted text-lg mb-6">
+                  Software Engineering @ Auburn University
+                  <br />
+                  Building tools with React, TypeScript, and Python.
+                  <br />
+                  Open to Summer 2026 SWE internships (full-stack, automation, web dev).
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('experience')}
+                    className="px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent rounded font-medium transition-colors"
+                  >
+                    View Work
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('projects')}
+                    className="px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent rounded font-medium transition-colors"
+                  >
+                    See Projects
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.open('/UlissesResume%20(5).pdf', '_blank')}
+                    className="px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent rounded font-medium transition-colors"
+                  >
+                    Download Resume
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </header>
@@ -425,13 +448,6 @@ while True:
           }`}
         >
           <div className={`w-full max-w-md font-mono text-sm sm:text-base ${isDarkMode ? 'text-ink-muted' : 'text-slate-600'}`}>
-            <div className="flex items-baseline gap-2 mb-1">
-              <span className="text-accent select-none">&gt;</span>
-              <span className={isDarkMode ? 'text-ink' : 'text-slate-800'}>status</span>
-            </div>
-            <p className="pl-4 mb-6">
-              Currently seeking Summer 2026 Software Engineering Internships.
-            </p>
             <div className="flex items-baseline gap-2 mb-2">
               <span className="text-accent select-none">&gt;</span>
               <span className={isDarkMode ? 'text-ink' : 'text-slate-800'}>contact</span>
