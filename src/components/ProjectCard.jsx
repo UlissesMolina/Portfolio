@@ -34,7 +34,7 @@ function highlightLine(line, isDark) {
   ));
 }
 
-export default function ProjectCard({ project, isDarkMode, roundedClass = 'rounded-lg', featured = false }) {
+export default function ProjectCard({ project, roundedClass = 'rounded-lg', featured = false }) {
   const videoRef = useRef(null);
 
   const handleMouseEnter = () => {
@@ -55,13 +55,7 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
 
   return (
     <div
-      className={`group relative block overflow-hidden ${roundedClass} border transition-all duration-300 ease-out cursor-pointer
-        hover:scale-[1.02] hover:-translate-y-1
-        hover:shadow-lg
-        ${isDarkMode
-          ? 'border-surface-border bg-surface-card hover:border-accent/30 hover:shadow-accent/10'
-          : 'border-slate-300 bg-slate-100 hover:border-accent/40 hover:shadow-slate-300/50'
-        }`}
+      className={`group relative block overflow-hidden ${roundedClass} border border-surface-border bg-surface-card hover:border-accent/30 hover:shadow-accent/10 transition-all duration-300 ease-out cursor-pointer hover:scale-[1.02] hover:-translate-y-1 hover:shadow-lg`}
     >
       <a
         href={project.githubUrl}
@@ -70,27 +64,21 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
         className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[inherit]"
       >
         <div
-          className={`relative w-full overflow-hidden ${aspectClass} ${!hasSnippet ? (isDarkMode ? 'bg-surface-border/50' : 'bg-slate-100') : ''}`}
+          className={`relative w-full overflow-hidden ${aspectClass} ${!hasSnippet ? 'bg-surface-border/50' : ''}`}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
           {hasSnippet ? (
-            <div className={`absolute inset-0 flex flex-col p-3 sm:p-4 ${
-              isDarkMode
-                ? 'bg-gradient-to-b from-surface-bg/95 to-surface-card'
-                : 'bg-gradient-to-b from-slate-900/95 to-slate-800'
-            }`}>
-              <div className={`font-mono text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-auto flex ${
-                isDarkMode ? 'text-ink-muted' : 'text-slate-300'
-              }`}>
-                <div className={`select-none pr-3 tabular-nums shrink-0 border-r text-right min-w-[2rem] ${isDarkMode ? 'border-white/10' : 'border-slate-400/60'}`}>
+            <div className="absolute inset-0 flex flex-col p-3 sm:p-4 bg-gradient-to-b from-surface-bg/95 to-surface-card">
+              <div className="font-mono text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-auto flex text-ink-muted">
+                <div className="select-none pr-3 tabular-nums shrink-0 border-r border-white/10 text-right min-w-[2rem]">
                   {project.snippet.split('\n').map((_, i) => (
-                    <div key={i} className={isDarkMode ? 'text-ink-dim' : 'text-slate-500'}>{i + 1}</div>
+                    <div key={i} className="text-ink-dim">{i + 1}</div>
                   ))}
                 </div>
                 <pre className="pl-3 flex-1 min-w-0 overflow-auto m-0">
                   {project.snippet.split('\n').map((line, i) => (
-                    <div key={i}>{highlightLine(line, isDarkMode)}</div>
+                    <div key={i}>{highlightLine(line, true)}</div>
                   ))}
                 </pre>
               </div>
@@ -112,7 +100,7 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
               aria-label={`Video preview for ${project.title}`}
             />
           ) : (
-            <div className={`flex h-full w-full items-center justify-center ${isDarkMode ? 'text-ink-dim' : 'text-slate-400'}`}>
+            <div className="flex h-full w-full items-center justify-center text-ink-dim">
               <span className="text-sm font-medium">{project.title}</span>
             </div>
           )}
@@ -120,12 +108,12 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
         <div className={featured ? 'p-4' : 'p-3'}>
           <div className="flex flex-wrap items-center gap-2 mb-1">
             {featured && (
-              <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${isDarkMode ? 'bg-accent/20 text-accent' : 'bg-accent/15 text-accent'}`}>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent/20 text-accent">
                 Featured
               </span>
             )}
             {featured && project.status && (
-              <span className={`text-[10px] font-mono tabular-nums ${isDarkMode ? 'text-ink-dim' : 'text-slate-500'}`}>
+              <span className="text-[10px] font-mono tabular-nums text-ink-dim">
                 {project.status}
               </span>
             )}
@@ -133,14 +121,14 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
           <h3
             className={`font-medium line-clamp-2 transition-colors ${
               featured ? 'text-base sm:text-lg mb-2' : 'text-sm mb-1'
-            } ${isDarkMode ? 'text-ink group-hover:text-accent/90' : 'text-slate-900'}`}
+            } text-ink group-hover:text-accent/90`}
           >
             {project.title}
           </h3>
           <p
             className={`leading-snug mb-2 transition-colors ${
               featured ? 'text-sm line-clamp-3' : 'text-xs line-clamp-2'
-            } ${isDarkMode ? 'text-ink-muted' : 'text-slate-600'}`}
+            } text-ink-muted`}
           >
             {project.description}
           </p>
@@ -150,11 +138,7 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
               return (
                 <span
                   key={tagIndex}
-                  className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md transition-colors ${
-                    isDarkMode
-                      ? 'text-ink-muted border border-surface-border bg-surface-border/40'
-                      : 'text-slate-600 border border-slate-300 bg-slate-100'
-                  }`}
+                  className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md transition-colors text-ink-muted border border-surface-border bg-surface-border/40"
                 >
                   {Icon ? <Icon size={10} /> : null}
                   {tag}
@@ -179,9 +163,7 @@ export default function ProjectCard({ project, isDarkMode, roundedClass = 'round
           href={project.githubUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={`inline-flex items-center gap-1 text-[11px] transition-colors ${
-            isDarkMode ? 'text-ink-dim hover:text-accent' : 'text-slate-500 hover:text-accent'
-          }`}
+          className="inline-flex items-center gap-1 text-[11px] transition-colors text-ink-dim hover:text-accent"
         >
           <FaGithub size={12} />
           Code

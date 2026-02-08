@@ -96,7 +96,7 @@ const NAV_COMMANDS = { about: 'about', work: 'experience', projects: 'projects',
 const BOOT_LINE_1 = '[●] Initializing portfolio...';
 const BOOT_LINE_2 = '[●] Loading projects...';
 
-export default function Terminal({ isDarkMode, onNavigateToSection, konamiMessage, onKonamiShown }) {
+export default function Terminal({ onNavigateToSection, konamiMessage, onKonamiShown }) {
   const [history, setHistory] = useState([{ type: 'output', text: BOOT_LINE_1 }]);
   const [input, setInput] = useState('');
   const [commandHistory, setCommandHistory] = useState([]);
@@ -204,8 +204,8 @@ export default function Terminal({ isDarkMode, onNavigateToSection, konamiMessag
     setInput('');
   };
 
-  const textColor = isDarkMode ? 'text-ink' : 'text-slate-800';
-  const mutedColor = isDarkMode ? 'text-ink-muted' : 'text-slate-500';
+  const textColor = 'text-ink';
+  const mutedColor = 'text-ink-muted';
   const promptColor = 'text-accent';
   const focusInput = () => inputRef.current?.focus();
 
@@ -214,9 +214,7 @@ export default function Terminal({ isDarkMode, onNavigateToSection, konamiMessag
       role="application"
       aria-label="Terminal"
       onClick={focusInput}
-      className={`font-mono overflow-hidden cursor-text rounded-lg text-sm sm:text-base ${
-        isDarkMode ? 'bg-surface-bg border border-white/[0.03]' : 'bg-slate-900 border border-black/[0.04]'
-      }`}
+      className="font-mono overflow-hidden cursor-text rounded-lg text-sm sm:text-base bg-surface-bg border border-white/[0.03]"
       style={{ minHeight: '320px' }}
     >
       <div className="p-5 pb-3 flex flex-col h-full" onClick={focusInput}>

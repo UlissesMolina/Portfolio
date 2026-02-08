@@ -112,3 +112,53 @@ section[id] {
   animation: load-bar 0.45s ease-out forwards;
   z-index: 50;
 }
+
+/* Terminal overlay open/close */
+@keyframes terminal-overlay-bg-in {
+  from { opacity: 0; backdrop-filter: blur(0); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+}
+@keyframes terminal-overlay-bg-out {
+  from { opacity: 1; backdrop-filter: blur(8px); }
+  to { opacity: 0; backdrop-filter: blur(0); }
+}
+@keyframes terminal-overlay-panel-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes terminal-overlay-panel-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.96); }
+}
+
+.terminal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  animation: terminal-overlay-bg-in 0.22s ease-out forwards;
+}
+.terminal-overlay--closing {
+  animation: terminal-overlay-bg-out 0.25s ease-in forwards;
+}
+.terminal-overlay--closing .terminal-overlay__panel {
+  animation: terminal-overlay-panel-out 0.25s ease-in forwards;
+}
+
+.terminal-overlay__panel {
+  position: relative;
+  width: 100%;
+  max-width: 48rem;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: terminal-overlay-panel-in 0.28s ease-out forwards;
+}

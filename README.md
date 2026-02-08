@@ -1,6 +1,6 @@
 # Personal Portfolio
 
-A terminal-style portfolio built with React and Vite. The site looks like a live terminal: type commands to jump to sections, play a word game, or explore projects.
+A terminal-style portfolio built with React and Vite. 
 
 ## Features
 

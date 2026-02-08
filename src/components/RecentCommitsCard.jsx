@@ -34,7 +34,7 @@ function formatLogDate(date) {
   return `${y}-${m}-${d} ${h}:${min}`;
 }
 
-export default function RecentCommitsCard({ isDarkMode, theme = 'coral', roundedClass = 'rounded-xl', cardTier = 'tertiary' }) {
+export default function RecentCommitsCard({ theme = 'coral', roundedClass = 'rounded-xl', cardTier = 'tertiary' }) {
   const languageColors = LANGUAGE_COLORS_BY_THEME[theme] ?? LANGUAGE_COLORS_BY_THEME.coral;
   const [commits, setCommits] = useState([]);
   const [languages, setLanguages] = useState([]); // { name, percentage, color }
@@ -164,16 +164,14 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
   }, []);
 
   const padX = cardTier === 'tertiary' ? 'px-3' : 'px-4';
-  const messageColor = isDarkMode ? 'text-ink-muted' : 'text-slate-600';
-  const linkColor = isDarkMode ? 'text-ink-muted hover:text-accent' : 'text-slate-600 hover:text-accent';
+  const messageColor = 'text-ink-muted';
+  const linkColor = 'text-ink-muted hover:text-accent';
 
   return (
     <div
-      className={`w-full ${roundedClass} overflow-hidden font-mono text-sm transition-colors duration-300 ${
-        isDarkMode ? 'bg-surface-card/60 border border-surface-border' : 'bg-slate-100/90 border border-slate-300'
-      }`}
+      className={`w-full ${roundedClass} overflow-hidden font-mono text-sm transition-colors duration-300 bg-surface-card/60 border border-surface-border`}
     >
-      <div className={`${padX} pt-3 border-t ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`}>
+      <div className={`${padX} pt-3 border-t border-surface-border`}>
         <div className={`text-xs tracking-wider ${messageColor}`}>
           ───────────────────────────────────────
         </div>
@@ -193,19 +191,17 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
               href={commit.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`block py-0.5 rounded transition-colors ${
-                isDarkMode ? 'hover:bg-surface-border/50' : 'hover:bg-slate-100'
-              }`}
+              className="block py-0.5 rounded transition-colors hover:bg-surface-border/50"
             >
-              <span className={isDarkMode ? 'text-ink-dim' : 'text-slate-500'}>
+              <span className="text-ink-dim">
                 [{formatLogDate(commit.date)}]
               </span>
               {' '}
               <span className={messageColor}>{truncateMessage(commit.message)}</span>
               {'     '}
-              <span className={isDarkMode ? 'text-emerald-500/90' : 'text-emerald-600'}>+{commit.additions ?? '—'}</span>
-              <span className={isDarkMode ? 'text-slate-500' : 'text-slate-400'}> / </span>
-              <span className={isDarkMode ? 'text-rose-500/90' : 'text-rose-600'}>-{commit.deletions ?? '—'}</span>
+              <span className="text-emerald-500/90">+{commit.additions ?? '—'}</span>
+              <span className="text-slate-500"> / </span>
+              <span className="text-rose-500/90">-{commit.deletions ?? '—'}</span>
             </a>
           ))
         )}
@@ -215,7 +211,7 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
         Watching for changes... (press Ctrl+C to stop)
       </div>
 
-      <div className={`${padX} pb-3 pt-1 border-t ${isDarkMode ? 'border-surface-border' : 'border-slate-300'}`}>
+      <div className={`${padX} pb-3 pt-1 border-t border-surface-border`}>
         <a
           href={repoUrl}
           target="_blank"
@@ -242,14 +238,12 @@ export default function RecentCommitsCard({ isDarkMode, theme = 'coral', rounded
                 />
               ))
             ) : (
-              <div className={`h-full w-full rounded-full ${isDarkMode ? 'bg-surface-border' : 'bg-slate-200'}`} />
+              <div className="h-full w-full rounded-full bg-surface-border" />
             )}
           </div>
           {hoveredLang && (
             <div
-              className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 text-xs font-medium whitespace-nowrap rounded z-20 ${
-                isDarkMode ? 'bg-surface-card text-ink border border-surface-border' : 'bg-slate-800 text-slate-100 border border-slate-300'
-              }`}
+              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 text-xs font-medium whitespace-nowrap rounded z-20 bg-surface-card text-ink border border-surface-border"
             >
               {hoveredLang.name} {hoveredLang.percentage}%
             </div>
