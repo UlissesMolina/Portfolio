@@ -28,6 +28,7 @@ function App() {
   const [konamiMessage, setKonamiMessage] = useState(null);
   const [terminalOverlayOpen, setTerminalOverlayOpen] = useState(false);
   const [terminalOverlayClosing, setTerminalOverlayClosing] = useState(false);
+  const [heroCardAnimated, setHeroCardAnimated] = useState(false);
   const terminalCloseTimeoutRef = useRef(null);
 
   const closeTerminalOverlay = () => {
@@ -96,6 +97,13 @@ function App() {
     return () => {
       if (terminalCloseTimeoutRef.current) clearTimeout(terminalCloseTimeoutRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const t = requestAnimationFrame(() => {
+      setHeroCardAnimated(true);
+    });
+    return () => cancelAnimationFrame(t);
   }, []);
 
   useEffect(() => {
@@ -239,7 +247,7 @@ while True:
         <header id="about" className="pt-12 pb-6 scroll-mt-[5rem]">
           <div className="w-full max-w-3xl mx-auto">
             <div className="max-w-3xl mx-auto mt-12 space-y-8">
-              <div className="bg-surface-bg border border-white/[0.03] rounded-lg p-8">
+              <div className={`bg-surface-bg border border-white/[0.03] rounded-lg p-8 ${heroCardAnimated ? 'animate-fade-in' : 'opacity-0'}`}>
                 <h2 className="text-2xl font-bold text-ink mb-4">Ulisses Molina</h2>
                 <p className="text-ink-muted text-lg mb-6">
                   Software Engineering @ Auburn University
