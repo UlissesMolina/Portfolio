@@ -238,31 +238,6 @@ while True:
       <div className="relative max-w-4xl mx-auto px-4 sm:px-5 z-10 flex flex-col">
         <header id="about" className="pt-12 pb-6 scroll-mt-[5rem]">
           <div className="w-full max-w-3xl mx-auto">
-            <div className="md:hidden mt-3 flex flex-wrap gap-2 justify-center">
-              {[
-                { label: 'work', id: 'experience' },
-                { label: 'projects', id: 'projects' },
-                { label: 'activity', id: 'contributions' },
-                { label: 'contact', id: 'contact' },
-              ].map(({ label, id }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => scrollToSection(id)}
-                  className="font-mono text-xs px-3 py-2 rounded-md border border-surface-border text-ink-muted hover:border-accent/50 hover:text-accent transition-colors"
-                >
-                  $ {label}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => window.open('/UlissesResume%20(5).pdf', '_blank')}
-                className="font-mono text-xs px-3 py-2 rounded-md border border-surface-border text-ink-muted hover:border-accent/50 hover:text-accent transition-colors"
-              >
-                $ resume
-              </button>
-            </div>
-
             <div className="max-w-3xl mx-auto mt-12 space-y-8">
               <div className="bg-surface-bg border border-white/[0.03] rounded-lg p-8">
                 <h2 className="text-2xl font-bold text-ink mb-4">Ulisses Molina</h2>

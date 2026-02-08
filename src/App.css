@@ -2,6 +2,12 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Slight animation when changing accent theme */
+html,
+html * {
+  transition: color 0.32s ease, background-color 0.32s ease, border-color 0.32s ease, box-shadow 0.32s ease, fill 0.32s ease, stroke 0.32s ease;
+}
+
 :root,
 [data-theme="coral"] {
   --accent: #ff6b35;
