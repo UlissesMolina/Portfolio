@@ -9,6 +9,8 @@ const DRIFT = 0.22;
 const MOUSE_RADIUS = 120;
 const MOUSE_STRENGTH = 0.018;
 const GLOW_RADIUS = 8;
+const STABILIZE_MS = 500; // ignore touch/mouse for this long after load/reload
+const RESIZE_DEBOUNCE_MS = 280; // wait for viewport to settle on load/reload before applying resize
 
 function getAccentColor() {
   if (typeof document === 'undefined') return '147, 93, 249'; // dracula default
@@ -26,6 +28,7 @@ export default function ParticleNetwork() {
   const rafRef = useRef(null);
   const particlesRef = useRef([]);
   const mouseRef = useRef({ x: null, y: null });
+  const mountedAtRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -59,10 +62,16 @@ export default function ParticleNetwork() {
 
     setSize();
     initParticles();
+    mountedAtRef.current = performance.now();
 
+    let resizeTimeoutId = null;
     const handleResize = () => {
-      setSize();
-      initParticles();
+      if (resizeTimeoutId) clearTimeout(resizeTimeoutId);
+      resizeTimeoutId = setTimeout(() => {
+        resizeTimeoutId = null;
+        setSize();
+        initParticles();
+      }, RESIZE_DEBOUNCE_MS);
     };
 
     const handleMouseMove = (e) => {
@@ -108,9 +117,11 @@ export default function ParticleNetwork() {
       if (cancelled || !ctx) return;
 
       const rgb = getAccentColor();
-      const mx = mouseRef.current.x;
-      const my = mouseRef.current.y;
       const particles = particlesRef.current;
+      const now = performance.now();
+      const stable = mountedAtRef.current != null && now - mountedAtRef.current >= STABILIZE_MS;
+      const mx = stable ? mouseRef.current.x : null;
+      const my = stable ? mouseRef.current.y : null;
 
       ctx.clearRect(0, 0, width, height);
 
@@ -176,6 +187,7 @@ export default function ParticleNetwork() {
 
     return () => {
       cancelled = true;
+      if (resizeTimeoutId) clearTimeout(resizeTimeoutId);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
