@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 const WELCOME = "Type 'help' to start.";
 const WHOAMI_OUTPUT = 'Ulisses Molina — Software Engineering Student';
@@ -120,9 +120,14 @@ export default function Terminal({ onNavigateToSection, konamiMessage, onKonamiS
     return () => bootTimeoutsRef.current.forEach(clearTimeout);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = scrollContainerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight;
+    };
+    scrollToBottom();
+    requestAnimationFrame(scrollToBottom);
   }, [history]);
 
   useEffect(() => {
@@ -214,11 +219,15 @@ export default function Terminal({ onNavigateToSection, konamiMessage, onKonamiS
       role="application"
       aria-label="Terminal"
       onClick={focusInput}
-      className="font-mono overflow-hidden cursor-text rounded-lg text-sm sm:text-base bg-surface-bg border border-white/[0.03]"
+      className="font-mono overflow-hidden cursor-text rounded-lg text-sm sm:text-base bg-surface-bg border border-white/[0.03] h-full flex flex-col min-h-0"
       style={{ minHeight: '320px' }}
     >
-      <div className="p-5 pb-3 flex flex-col h-full" onClick={focusInput}>
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto space-y-1 min-h-0">
+      <div className="p-5 pb-3 flex flex-col flex-1 min-h-0" onClick={focusInput}>
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden space-y-1 min-h-0 overscroll-behavior-contain"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {history.map((item, i) => (
             <div key={i} className="break-words">
               {item.type === 'command' ? (

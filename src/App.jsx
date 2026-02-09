@@ -4,6 +4,7 @@ import NavBar from './components/NavBar';
 import Terminal from './components/Terminal';
 import ProjectCard from './components/ProjectCard';
 import RecentCommitsCard from './components/RecentCommitsCard';
+import ParticleNetwork from './components/ParticleNetwork';
 
 const GITHUB_USER = 'UlissesMolina';
 
@@ -235,6 +236,7 @@ while True:
 
   return (
     <div className="relative min-h-screen font-sans transition-colors duration-300 bg-surface-grid">
+      <ParticleNetwork />
       {loadingBarActive && <div className="load-bar" aria-hidden="true" />}
       <NavBar
         activeSection={activeSection}
