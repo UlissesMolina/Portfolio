@@ -72,6 +72,11 @@ export default function ParticleNetwork() {
         const prevW = width;
         const prevH = height;
         setSize();
+
+        const widthChange = Math.abs(width - prevW);
+        const heightChange = Math.abs(height - prevH);
+        if (widthChange < 10 && heightChange < 200) return;
+
         const particles = particlesRef.current;
         if (prevW > 0 && prevH > 0 && particles.length > 0) {
           for (let i = 0; i < particles.length; i++) {
