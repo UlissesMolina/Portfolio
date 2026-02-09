@@ -69,8 +69,17 @@ export default function ParticleNetwork() {
       if (resizeTimeoutId) clearTimeout(resizeTimeoutId);
       resizeTimeoutId = setTimeout(() => {
         resizeTimeoutId = null;
+        const prevW = width;
+        const prevH = height;
         setSize();
-        initParticles();
+        const particles = particlesRef.current;
+        if (prevW > 0 && prevH > 0 && particles.length > 0) {
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            p.x = Math.max(0, Math.min(width, (width / prevW) * p.x));
+            p.y = Math.max(0, Math.min(height, (height / prevH) * p.y));
+          }
+        }
       }, RESIZE_DEBOUNCE_MS);
     };
 
