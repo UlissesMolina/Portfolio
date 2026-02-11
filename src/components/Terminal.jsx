@@ -29,20 +29,13 @@ const PROJECTS = {
   Tech: Python, Selenium, Web Automation
 
   GitHub: https://github.com/UlissesMolina/Tiger-Scheduler-Course-Auto-Register-Tool`,
-  portfolio: `Personal Portfolio
+  'finance-dashboard': `Clarity Finance
 
-  This interactive terminal portfolio. Built with React and Vite.
-
-  Tech: React, JavaScript, Tailwind CSS, Vite
-
-  GitHub: https://github.com/UlissesMolina/Portfolio`,
-  'finance-dashboard': `Finance Dashboard
-
-  A React dashboard for tracking and visualizing financial data.
-  Built with Create React App and TypeScript.
+  See your money clearly. Track income, expenses, and savings in one place.
 
   Tech: React, TypeScript, CSS
 
+  Live: https://clarityfi.netlify.app/
   GitHub: https://github.com/UlissesMolina/FinanceDashBoard`,
 };
 
@@ -68,8 +61,7 @@ function execute(command, args) {
     case 'projects':
       return `My projects:
   1. tiger-scheduler - Auto-registration tool for Auburn courses
-  2. portfolio - This site
-  3. finance-dashboard - Finance tracking dashboard
+  2. finance-dashboard - Clarity Finance (income, expenses, savings)
 
 Type 'open <project-name>' to learn more.`;
     case 'open': {
@@ -77,7 +69,7 @@ Type 'open <project-name>' to learn more.`;
       if (name === 'github') return null;
       if (name === 'linkedin') return null;
       if (name && PROJECTS[name]) return PROJECTS[name];
-      return `Unknown project. Try: open tiger-scheduler, open portfolio, or open finance-dashboard`;
+      return `Unknown project. Try: open tiger-scheduler or open finance-dashboard`;
     }
     case 'contact':
       return `Email: umolina2005@gmail.com

@@ -214,30 +214,11 @@ while True:
   time.sleep(poll_interval)`,
     },
     {
-      title: 'Personal Portfolio',
-      description: 'A modern, minimal portfolio website showcasing my experience, projects, and technical skills. Built with React and Vite, featuring a clean design with smooth animations and responsive layout.',
-      tags: ['React', 'JavaScript', 'Tailwind CSS', 'Vite'],
-      githubUrl: 'https://github.com/UlissesMolina/Portfolio',
-      demoUrl: null,
-      media: { type: 'video', url: '/portfolio.mp4' },
-      featured: false,
-      snippet: `export default function App() {
-  return (
-    <>
-      <Terminal onNavigateToSection={scrollToSection} />
-      <Section $="work" />
-      <Section $="projects" />
-      <Section $="activity" />
-    </>
-  )
-}`,
-    },
-    {
-      title: 'Finance Dashboard',
-      description: 'A React dashboard for tracking and visualizing financial data. Built with Create React App and TypeScript, with a responsive UI and structured layout for finance views.',
+      title: 'Clarity Finance',
+      description: 'See your money clearly. Track your income, expenses, and savings in one place.',
       tags: ['React', 'TypeScript', 'CSS'],
       githubUrl: 'https://github.com/UlissesMolina/FinanceDashBoard',
-      demoUrl: null,
+      demoUrl: 'https://clarityfi.netlify.app/',
       media: null,
       featured: false,
       snippet: `function Dashboard() {

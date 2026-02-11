@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { FaGithub, FaPython, FaReact } from 'react-icons/fa';
+import { FaGithub, FaPython, FaReact, FaExternalLinkAlt } from 'react-icons/fa';
 import { SiTypescript } from 'react-icons/si';
 
 const TAG_ICONS = {
@@ -154,9 +154,11 @@ export default function ProjectCard({ project, roundedClass = 'rounded-lg', feat
             href={project.demoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-accent text-white hover:bg-accent-light transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-accent text-black hover:bg-accent-light transition-colors"
+            aria-label="Open live site"
           >
-            Live demo
+            <FaExternalLinkAlt size={11} />
+            Live site
           </a>
         )}
         <a
