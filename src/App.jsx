@@ -232,6 +232,29 @@ while True:
   )
 }`,
     },
+    {
+      title: 'Finance Dashboard',
+      description: 'A React dashboard for tracking and visualizing financial data. Built with Create React App and TypeScript, with a responsive UI and structured layout for finance views.',
+      tags: ['React', 'TypeScript', 'CSS'],
+      githubUrl: 'https://github.com/UlissesMolina/FinanceDashBoard',
+      demoUrl: null,
+      media: null,
+      featured: false,
+      snippet: `function Dashboard() {
+  const [data, setData] = useState<FinanceData | null>(null);
+
+  useEffect(() => {
+    fetchFinanceData().then(setData);
+  }, []);
+
+  return (
+    <div className="dashboard">
+      <SummaryCards data={data} />
+      <Charts data={data} />
+    </div>
+  );
+}`,
+    },
   ];
 
   return (
@@ -275,7 +298,7 @@ while True:
                   </button>
                   <button
                     type="button"
-                    onClick={() => window.open('/UlissesResume%20(5).pdf', '_blank')}
+                    onClick={() => window.open('/uliResume.pdf', '_blank')}
                     className="px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent rounded font-medium transition-colors"
                   >
                     View Resume
@@ -442,7 +465,7 @@ while True:
               <p>Email: <a href="mailto:umolina2005@gmail.com" className="font-medium hover:underline text-accent hover:text-accent-light">umolina2005@gmail.com</a></p>
               <p>GitHub: <a href="https://github.com/UlissesMolina" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline text-accent hover:text-accent-light">github.com/UlissesMolina</a></p>
               <p>LinkedIn: <a href="https://www.linkedin.com/in/ulissesmolina" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline text-accent hover:text-accent-light">linkedin.com/in/ulissesmolina</a></p>
-              <p>Resume: <a href="/UlissesResume%20(5).pdf" download="UlissesResume.pdf" className="font-medium hover:underline text-accent hover:text-accent-light">Resume (PDF)</a></p>
+              <p>Resume: <a href="/uliResume.pdf" download="uliResume.pdf" className="font-medium hover:underline text-accent hover:text-accent-light">Resume (PDF)</a></p>
             </div>
           </div>
           <span className="text-[10px] font-mono tabular-nums transition-colors text-ink-dim" title="Visitor session">

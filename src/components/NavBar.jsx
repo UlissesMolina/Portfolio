@@ -67,8 +67,8 @@ export default function NavBar({ activeSection = '', time, theme = 'coral', onTh
             </a>
           ))}
           <a
-            href="/UlissesResume%20(5).pdf"
-            download="UlissesResume.pdf"
+            href="/uliResume.pdf"
+            download="uliResume.pdf"
             className="text-sm font-medium transition-colors px-2 py-1 rounded hover:underline underline-offset-2 text-ink-muted hover:text-accent animate-nav-link-in"
           >
             Resume
@@ -129,8 +129,8 @@ export default function NavBar({ activeSection = '', time, theme = 'coral', onTh
             </a>
           ))}
           <a
-            href="/UlissesResume%20(5).pdf"
-            download="UlissesResume.pdf"
+            href="/uliResume.pdf"
+            download="uliResume.pdf"
             onClick={closeMobile}
             className="py-3 px-3 rounded-lg text-base font-medium transition-colors hover:underline underline-offset-2 text-ink-muted hover:text-accent hover:bg-white/5"
           >

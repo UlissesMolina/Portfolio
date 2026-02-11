@@ -36,6 +36,14 @@ const PROJECTS = {
   Tech: React, JavaScript, Tailwind CSS, Vite
 
   GitHub: https://github.com/UlissesMolina/Portfolio`,
+  'finance-dashboard': `Finance Dashboard
+
+  A React dashboard for tracking and visualizing financial data.
+  Built with Create React App and TypeScript.
+
+  Tech: React, TypeScript, CSS
+
+  GitHub: https://github.com/UlissesMolina/FinanceDashBoard`,
 };
 
 function parseInput(line) {
@@ -61,6 +69,7 @@ function execute(command, args) {
       return `My projects:
   1. tiger-scheduler - Auto-registration tool for Auburn courses
   2. portfolio - This site
+  3. finance-dashboard - Finance tracking dashboard
 
 Type 'open <project-name>' to learn more.`;
     case 'open': {
@@ -68,7 +77,7 @@ Type 'open <project-name>' to learn more.`;
       if (name === 'github') return null;
       if (name === 'linkedin') return null;
       if (name && PROJECTS[name]) return PROJECTS[name];
-      return `Unknown project. Try: open tiger-scheduler  or  open portfolio`;
+      return `Unknown project. Try: open tiger-scheduler, open portfolio, or open finance-dashboard`;
     }
     case 'contact':
       return `Email: umolina2005@gmail.com
@@ -184,7 +193,7 @@ export default function Terminal({ onNavigateToSection, konamiMessage, onKonamiS
     }
 
     if (command === 'resume') {
-      window.open('/UlissesResume%20(5).pdf', '_blank');
+      window.open('/uliResume.pdf', '_blank');
       output = 'Opening resume...';
     } else if (command === 'open' && args[0]) {
       const name = args[0].toLowerCase().replace(/_/g, '-');
