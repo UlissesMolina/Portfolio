@@ -70,13 +70,13 @@ export default function ProjectCard({ project, roundedClass = 'rounded-lg', feat
         >
           {hasSnippet ? (
             <div className="absolute inset-0 flex flex-col p-3 sm:p-4 bg-gradient-to-b from-surface-bg/95 to-surface-card">
-              <div className="font-mono text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-auto flex text-ink-muted">
+              <div className="font-mono text-xs sm:text-sm leading-relaxed flex-1 min-h-0 overflow-auto flex text-ink-muted scrollbar-hide">
                 <div className="select-none pr-3 tabular-nums shrink-0 border-r border-white/10 text-right min-w-[2rem]">
                   {project.snippet.split('\n').map((_, i) => (
                     <div key={i} className="text-ink-dim">{i + 1}</div>
                   ))}
                 </div>
-                <pre className="pl-3 flex-1 min-w-0 overflow-auto m-0">
+                <pre className="pl-3 flex-1 min-w-0 overflow-auto m-0 scrollbar-hide">
                   {project.snippet.split('\n').map((line, i) => (
                     <div key={i}>{highlightLine(line, true)}</div>
                   ))}
@@ -138,7 +138,7 @@ export default function ProjectCard({ project, roundedClass = 'rounded-lg', feat
               return (
                 <span
                   key={tagIndex}
-                  className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md transition-colors text-ink-muted border border-surface-border bg-surface-border/40"
+                  className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md transition-all duration-300 text-ink-muted border border-surface-border bg-surface-border/40 hover:text-accent hover:border-accent/40 hover:shadow-[0_0_6px_var(--accent)]"
                 >
                   {Icon ? <Icon size={10} /> : null}
                   {tag}

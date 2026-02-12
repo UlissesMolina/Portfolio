@@ -26,6 +26,35 @@ section[id] {
   scroll-margin-top: 5.5rem;
 }
 
+/* Custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #484f58 #0f1419;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0f1419;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #484f58;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+*::-webkit-scrollbar-corner {
+  background: #0f1419;
+}
+
 /* Nav bar entrance */
 @keyframes nav-slide-in {
   from {

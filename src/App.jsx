@@ -201,8 +201,7 @@ function App() {
       githubUrl: 'https://github.com/UlissesMolina/Tiger-Scheduler-Course-Auto-Register-Tool',
       demoUrl: null,
       media: { type: 'video', url: '/script.mp4' },
-      featured: true,
-      status: 'Status: ● Running',
+      featured: false,
       snippet: `from selenium import webdriver
 
 while True:
@@ -223,18 +222,13 @@ while True:
       featured: false,
       snippet: `function Dashboard() {
   const [data, setData] = useState<FinanceData | null>(null);
-
-  useEffect(() => {
-    fetchFinanceData().then(setData);
-  }, []);
-
+  useEffect(() => fetchFinanceData().then(setData), []);
   return (
     <div className="dashboard">
       <SummaryCards data={data} />
       <Charts data={data} />
     </div>
-  );
-}`,
+  ); }`,
     },
   ];
 
