@@ -5,6 +5,7 @@ const THEMES = [
   { id: 'coral', label: 'Coral' },
   { id: 'matrix', label: 'Matrix' },
   { id: 'dracula', label: 'Dracula' },
+  { id: 'frost', label: 'Frost' },
 ];
 
 export default function NavBar({ activeSection = '', time, theme = 'coral', onThemeChange }) {
@@ -47,7 +48,7 @@ export default function NavBar({ activeSection = '', time, theme = 'coral', onTh
 
   return (
     <nav className={`sticky top-0 z-30 w-full border-b border-surface-border bg-surface-bg/90 backdrop-blur-sm transition-colors duration-300 ${navAnimated ? 'animate-nav-slide-in' : 'opacity-0 -translate-y-full'}`}>
-      <div className="max-w-4xl mx-auto px-4 sm:px-5 py-2.5 flex items-center justify-between gap-4">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
         <a
           href="#"
           onClick={closeMobile}

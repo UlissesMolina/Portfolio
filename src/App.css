@@ -21,6 +21,10 @@ html * {
   --accent: #bd93f9;
   --accent-light: #d4b3ff;
 }
+[data-theme="frost"] {
+  --accent: #5dadec;
+  --accent-light: #88c8f7;
+}
 
 section[id] {
   scroll-margin-top: 5.5rem;

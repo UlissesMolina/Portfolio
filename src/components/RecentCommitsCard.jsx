@@ -17,6 +17,10 @@ const LANGUAGE_COLORS_BY_THEME = {
     '#bd93f9', '#a855f7', '#8b5cf6', '#c084fc', '#7c3aed',
     '#ec4899', '#6d28d9', '#be185d', '#4c1d95', '#9d174d',
   ],
+  frost: [
+    '#5dadec', '#0ea5e9', '#a5f3fc', '#1d4ed8', '#67e8f9',
+    '#1e3a5f', '#38bdf8', '#0c4a6e', '#7dd3fc', '#082f49',
+  ],
 };
 
 function truncateMessage(msg, maxLen = 40) {

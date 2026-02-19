@@ -90,7 +90,17 @@ function App() {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
-    return () => observer.disconnect();
+
+    const onScroll = () => {
+      const nearBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+      if (nearBottom) setActiveSection('contact');
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
 
@@ -243,10 +253,10 @@ while True:
         onThemeChange={setTheme}
       />
 
-      <div className="relative max-w-4xl mx-auto px-4 sm:px-5 z-10 flex flex-col">
-        <header id="about" className="pt-12 pb-6 scroll-mt-[5rem]">
-          <div className="w-full max-w-3xl mx-auto">
-            <div className="max-w-3xl mx-auto mt-12 space-y-8">
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 z-10 flex flex-col">
+        <header id="about" className="pt-12 pb-10 scroll-mt-[5rem]">
+          <div className="w-full max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto mt-12 space-y-8">
               <div className={`bg-surface-bg border border-white/[0.03] rounded-lg p-8 ${heroCardAnimated ? 'animate-fade-in' : 'opacity-0'}`}>
                 <h2 className="text-2xl font-bold text-ink mb-4">Ulisses Molina</h2>
                 <p className="text-ink-muted text-lg mb-6">
@@ -274,7 +284,7 @@ while True:
                   <button
                     type="button"
                     onClick={() => window.open('/uliResume.pdf', '_blank')}
-                    className="px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent rounded font-medium transition-colors"
+                    className="px-5 py-2 bg-accent hover:bg-accent-light text-surface-bg rounded font-semibold transition-colors"
                   >
                     View Resume
                   </button>
@@ -311,7 +321,7 @@ while True:
               <div className={`pl-4 mt-0.5 text-ink-muted`}>→ work</div>
             </div>
             <div className={`w-full border-t mb-8 border-surface-border`} style={{ maxWidth: '32rem' }} />
-            <div className="w-full max-w-2xl">
+            <div className="w-full max-w-3xl">
               {experiences.map((exp, index) => {
                 const isExpanded = expandedExpIndex === index;
                 const hasMore = exp.bullets.length > 1;
@@ -348,7 +358,7 @@ while True:
                             {exp.tech.map((t) => (
                               <span
                                 key={t}
-                                className="text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent-light"
+                                className="inline-flex items-center text-[10px] px-2 py-1 rounded-md transition-all duration-300 text-ink-muted border border-surface-border bg-surface-border/40 hover:text-accent hover:border-accent/40 hover:shadow-[0_0_6px_var(--accent)]"
                               >
                                 {t}
                               </span>
@@ -371,9 +381,17 @@ while True:
                               <button
                                 type="button"
                                 onClick={() => setExpandedExpIndex(isExpanded ? null : index)}
-                                className="text-xs font-medium transition-colors text-accent hover:text-accent-light"
+                                className="inline-flex items-center gap-1 text-xs font-medium transition-colors text-accent hover:text-accent-light"
                               >
-                                {isExpanded ? 'Show less' : `${exp.bullets.length - 1} more`}
+                                {isExpanded ? 'Show less' : `Show ${exp.bullets.length - 1} more`}
+                                <svg
+                                  width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                                  className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                  aria-hidden
+                                >
+                                  <polyline points="6 9 12 15 18 9" />
+                                </svg>
                               </button>
                             </li>
                           </>
@@ -398,7 +416,7 @@ while True:
               <div className={`pl-4 mt-0.5 text-ink-muted`}>→ projects</div>
             </div>
             <div className={`w-full border-t mb-8 border-surface-border`} style={{ maxWidth: '32rem' }} />
-            <div className="grid gap-5 w-full max-w-3xl grid-cols-1 sm:grid-cols-2">
+            <div className="grid gap-5 w-full max-w-4xl grid-cols-1 sm:grid-cols-2">
               {projects.map((project, index) => (
                 <ProjectCard
                   key={index}
@@ -421,7 +439,7 @@ while True:
               </div>
               <div className={`pl-4 mt-0.5 text-ink-muted`}>→ activity</div>
             </div>
-            <div className={`w-full border-t mb-6 border-surface-border`} style={{ maxWidth: '32rem' }} />
+            <div className={`w-full border-t mb-8 border-surface-border`} style={{ maxWidth: '32rem' }} />
             <div className="w-full max-w-xl">
               <RecentCommitsCard theme={theme} roundedClass="rounded-lg" />
             </div>
@@ -443,8 +461,8 @@ while True:
               <p>Resume: <a href="/uliResume.pdf" download="uliResume.pdf" className="font-medium hover:underline text-accent hover:text-accent-light">Resume (PDF)</a></p>
             </div>
           </div>
-          <span className="text-[10px] font-mono tabular-nums transition-colors text-ink-dim" title="Visitor session">
-            Session {formatSessionTime(time.getTime() - sessionStartRef.current)} · {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
+          <span className="text-[10px] font-mono tabular-nums transition-colors text-ink-dim" title="How long you've been on this page">
+            Time on page: {formatSessionTime(time.getTime() - sessionStartRef.current)} · {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
           </span>
         </footer>
       </div>

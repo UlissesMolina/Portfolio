@@ -4,16 +4,17 @@ const WELCOME = "Type 'help' to start.";
 const WHOAMI_OUTPUT = 'Ulisses Molina — Software Engineering Student';
 
 const HELP_OUTPUT = `Available commands:
-  about     Learn about me
-  work      Jump to experience
-  projects  View my projects
-  contact   Get in touch
-  resume    Download resume
+  about       Learn about me
+  work        Jump to experience
+  projects    View my projects
+  contact     Get in touch
+  resume      Download resume
+  skills      View tech stack
 
-  open github    Open GitHub profile
-  open linkedin  Open LinkedIn
+  open github     Open GitHub profile
+  open linkedin   Open LinkedIn
 
-  clear     Clear the screen
+  echo, date, ls, pwd, history, clear
 
 Try: about, work, projects — or just scroll down ↓`;
 
@@ -80,9 +81,28 @@ LinkedIn: linkedin.com/in/ulissesmolina`;
     case 'clear':
       return null;
     case 'ls':
-      return `tiger-scheduler/   portfolio/`;
+      return `tiger-scheduler/   finance-dashboard/`;
     case 'pwd':
       return `/home/ulises/hopefully-your-future-company`;
+    case 'echo':
+      return args.length > 0 ? args.join(' ') : '';
+    case 'date':
+      return new Date().toString();
+    case 'skills':
+    case 'tech':
+      return `Languages: JavaScript, TypeScript, Python, HTML, CSS
+Frameworks: React, Tailwind CSS, Vite
+Tools: Git, Firebase, Selenium, Jira
+Platforms: iOS, Android, Netlify`;
+    case 'history':
+      return null;
+    case 'cd':
+      return `You can't leave this portfolio.`;
+    case 'man':
+      return HELP_OUTPUT;
+    case 'exit':
+    case 'quit':
+      return `Nice try — you're stuck here.`;
     case 'sudo': {
       if (args[0] === 'rm' && args[1] === '-rf' && (args[2] === '/' || args[2] === '*')) return `Whoa there, calm down.`;
       return `Nice try`;
@@ -178,23 +198,51 @@ export default function Terminal({ onNavigateToSection, konamiMessage, onKonamiS
       return;
     }
 
+    if (command === 'history') {
+      const list = [...commandHistory, raw].map((c, i) => `  ${i + 1}  ${c}`).join('\n');
+      setCommandHistory((prev) => [...prev, raw].slice(-50));
+      setHistoryIndex(-1);
+      setHistory((prev) => [
+        ...prev,
+        { type: 'command', text: raw },
+        { type: 'output', text: list },
+      ]);
+      setInput('');
+      return;
+    }
+
     const sectionId = NAV_COMMANDS[command];
     if (sectionId && onNavigateToSection) {
       onNavigateToSection(sectionId);
-      if (output == null) output = `→ ${command}`;
+      setCommandHistory((prev) => [...prev, raw].slice(-50));
+      setHistoryIndex(-1);
+      setInput('');
+      return;
     }
 
     if (command === 'resume') {
       window.open('/uliResume.pdf', '_blank');
-      output = 'Opening resume...';
-    } else if (command === 'open' && args[0]) {
+      setCommandHistory((prev) => [...prev, raw].slice(-50));
+      setHistoryIndex(-1);
+      setInput('');
+      return;
+    }
+
+    if (command === 'open' && args[0]) {
       const name = args[0].toLowerCase().replace(/_/g, '-');
       if (name === 'github') {
         window.open('https://github.com/UlissesMolina', '_blank');
-        output = 'Opening GitHub...';
-      } else if (name === 'linkedin') {
+        setCommandHistory((prev) => [...prev, raw].slice(-50));
+        setHistoryIndex(-1);
+        setInput('');
+        return;
+      }
+      if (name === 'linkedin') {
         window.open('https://www.linkedin.com/in/ulissesmolina', '_blank');
-        output = 'Opening LinkedIn...';
+        setCommandHistory((prev) => [...prev, raw].slice(-50));
+        setHistoryIndex(-1);
+        setInput('');
+        return;
       }
     }
 
