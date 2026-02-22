@@ -38,6 +38,16 @@ const PROJECTS = {
 
   Live: https://clarityfi.netlify.app/
   GitHub: https://github.com/UlissesMolina/FinanceDashBoard`,
+  trackr: `Trackr
+
+  Full-stack job application tracker. Kanban board, analytics dashboard,
+  CSV bulk import. OpenAI GPT-4o for personalized cover letters.
+  Clerk auth, RESTful API, TanStack Query.
+
+  Tech: React, TypeScript, Node.js, Express, PostgreSQL, Prisma, OpenAI, Clerk
+
+  Live: https://usetrackr.netlify.app/
+  GitHub: https://github.com/UlissesMolina/Trackr`,
 };
 
 function parseInput(line) {
@@ -61,8 +71,9 @@ function execute(command, args) {
       return null;
     case 'projects':
       return `My projects:
-  1. tiger-scheduler - Auto-registration tool for Auburn courses
-  2. finance-dashboard - Clarity Finance (income, expenses, savings)
+  1. trackr - Job application tracker with AI cover letters
+  2. tiger-scheduler - Auto-registration tool for Auburn courses
+  3. finance-dashboard - Clarity Finance (income, expenses, savings)
 
 Type 'open <project-name>' to learn more.`;
     case 'open': {
@@ -70,7 +81,7 @@ Type 'open <project-name>' to learn more.`;
       if (name === 'github') return null;
       if (name === 'linkedin') return null;
       if (name && PROJECTS[name]) return PROJECTS[name];
-      return `Unknown project. Try: open tiger-scheduler or open finance-dashboard`;
+      return `Unknown project. Try: open trackr, open tiger-scheduler, or open finance-dashboard`;
     }
     case 'contact':
       return `Email: umolina2005@gmail.com
@@ -81,7 +92,7 @@ LinkedIn: linkedin.com/in/ulissesmolina`;
     case 'clear':
       return null;
     case 'ls':
-      return `tiger-scheduler/   finance-dashboard/`;
+      return `trackr/   tiger-scheduler/   finance-dashboard/`;
     case 'pwd':
       return `/home/ulises/hopefully-your-future-company`;
     case 'echo':

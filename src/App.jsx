@@ -205,6 +205,29 @@ function App() {
 
   const projects = [
     {
+      title: 'Trackr',
+      description: 'Full-stack job application tracker with a Kanban board, analytics dashboard, and CSV bulk import. Uses OpenAI GPT-4o to generate personalized cover letters from resume data. Clerk auth, RESTful API, TanStack Query.',
+      tags: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'Prisma', 'OpenAI', 'Clerk'],
+      githubUrl: 'https://github.com/UlissesMolina/Trackr',
+      demoUrl: 'https://usetrackr.netlify.app/',
+      media: null,
+      featured: true,
+      snippet: `const { data } = useQuery({
+  queryKey: ['jobs', status],
+  queryFn: () => api.getJobs(status),
+});
+
+const { mutate } = useMutation({
+  mutationFn: generateCoverLetter,
+  onMutate: async (resume) => {
+    await queryClient.cancelQueries(['coverLetter']);
+    const prev = queryClient.getQueryData(['coverLetter']);
+    queryClient.setQueryData(['coverLetter'], { draft: '...' });
+    return { prev };
+  },
+});`,
+    },
+    {
       title: 'Tiger Scheduler Course Auto-Register Tool',
       description: 'A Python automation script that monitors course availability on Auburn University\'s TigerScheduler platform. Automatically checks for open seats every minute, filters courses, and handles auto-login and registration actions.',
       tags: ['Python', 'Selenium', 'Web Automation'],
