@@ -7,6 +7,7 @@ import RecentCommitsCard from './components/RecentCommitsCard';
 import ParticleNetwork from './components/ParticleNetwork';
 
 const GITHUB_USER = 'UlissesMolina';
+const THEME_OPTIONS = ['coral', 'matrix', 'dracula', 'frost'];
 
 function formatSessionTime(ms) {
   const totalSeconds = Math.floor(ms / 1000);
@@ -25,7 +26,20 @@ function App() {
   const [expandedExpIndex, setExpandedExpIndex] = useState(null);
   const [activeSection, setActiveSection] = useState('');
   const [loadingBarActive, setLoadingBarActive] = useState(false);
-  const [theme, setTheme] = useState('coral');
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('portfolio-theme');
+      if (THEME_OPTIONS.includes(saved)) return saved;
+    } catch {}
+    return 'coral';
+  });
+
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+    try {
+      sessionStorage.setItem('portfolio-theme', newTheme);
+    } catch {}
+  };
   const [konamiMessage, setKonamiMessage] = useState(null);
   const [terminalOverlayOpen, setTerminalOverlayOpen] = useState(false);
   const [terminalOverlayClosing, setTerminalOverlayClosing] = useState(false);
@@ -154,6 +168,9 @@ function App() {
         if (entry.isIntersecting) {
           entry.target.classList.add('animate-fade-in');
           entry.target.classList.remove('opacity-0');
+          if (entry.target.id === 'experience') {
+            entry.target.classList.add('timeline-ready');
+          }
         }
       });
     }, observerOptions);
@@ -273,7 +290,7 @@ while True:
         activeSection={activeSection}
         time={time}
         theme={theme}
-        onThemeChange={setTheme}
+        onThemeChange={handleThemeChange}
       />
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 z-10 flex flex-col">
@@ -352,9 +369,16 @@ while True:
                 return (
                   <div key={index} className="group/exp relative flex items-stretch gap-5 pb-10 last:pb-0">
                     <div className="relative flex w-4 flex-shrink-0 flex-col items-center pt-1">
-                      <div className="relative z-[2] h-4 w-4 rounded-full border-2 animate-dot-pulse transition-all duration-200 group-hover/exp:scale-125 bg-accent border-accent/60" />
+                      <div
+                        className={`relative z-[2] h-4 w-4 rounded-full border-2 animate-dot-pulse transition-all duration-200 group-hover/exp:scale-125 bg-accent border-accent/60 ${index === 0 ? 'timeline-dot--first' : 'timeline-dot timeline-dot--animated'}`}
+                        style={index > 0 ? { '--timeline-delay': `${0.5 * index}s` } : undefined}
+                      />
                       {!isLast && (
-                        <div className="timeline-connector z-0" aria-hidden />
+                        <div
+                          className="timeline-connector timeline-connector--animated z-0"
+                          style={{ '--timeline-delay': `${0.2 + index * 0.5}s` }}
+                          aria-hidden
+                        />
                       )}
                     </div>
                     <div className={`flex-1 rounded-lg px-4 py-3 transition-all duration-200

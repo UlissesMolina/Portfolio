@@ -158,6 +158,47 @@ section[id] {
     color-mix(in srgb, var(--accent, #ff6b35) 45%, transparent) 100%
   );
   opacity: 0.85;
+  transform-origin: top;
+  transform: scaleY(0);
+  animation: timeline-line-draw 0.5s ease-out forwards;
+  animation-play-state: paused;
+}
+
+#experience.timeline-ready .timeline-connector {
+  animation-play-state: running;
+}
+
+.timeline-connector.timeline-connector--animated {
+  animation-delay: var(--timeline-delay, 0.2s);
+}
+
+@keyframes timeline-line-draw {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+.timeline-dot {
+  opacity: 0;
+  animation: timeline-dot-in 0.35s ease-out forwards;
+  animation-play-state: paused;
+}
+
+#experience.timeline-ready .timeline-dot {
+  animation-play-state: running;
+}
+
+.timeline-dot.timeline-dot--first {
+  opacity: 1;
+  animation: none;
+}
+
+.timeline-dot.timeline-dot--animated {
+  animation-delay: var(--timeline-delay, 0.5s);
+}
+
+@keyframes timeline-dot-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .expandable-content {
