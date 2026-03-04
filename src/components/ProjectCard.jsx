@@ -1,12 +1,17 @@
 import { useRef } from 'react';
 import { FaGithub, FaPython, FaReact, FaExternalLinkAlt } from 'react-icons/fa';
-import { SiTypescript } from 'react-icons/si';
+import { SiTypescript, SiSpringboot, SiPostgresql, SiDocker, SiNodedotjs } from 'react-icons/si';
 
 const TAG_ICONS = {
   Python: FaPython,
   React: FaReact,
   JavaScript: FaReact,
   TypeScript: SiTypescript,
+  Java: SiSpringboot,
+  'Spring Boot': SiSpringboot,
+  PostgreSQL: SiPostgresql,
+  Docker: SiDocker,
+  'Node.js': SiNodedotjs,
 };
 
 const KEYWORD_SET = new Set(['from', 'import', 'while', 'True', 'False', 'if', 'else', 'return', 'const', 'function', 'default', 'export', 'class', 'async', 'await']);
@@ -36,7 +41,6 @@ function highlightLine(line, isDark) {
 
 export default function ProjectCard({ project, roundedClass = 'rounded-lg', featured = false }) {
   const videoRef = useRef(null);
-
   const handleMouseEnter = () => {
     if (videoRef.current) {
       videoRef.current.play().catch(() => {});
@@ -110,6 +114,11 @@ export default function ProjectCard({ project, roundedClass = 'rounded-lg', feat
             {featured && (
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-accent/20 text-accent">
                 Featured
+              </span>
+            )}
+            {project.type && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-border/60 text-ink-dim border border-surface-border">
+                {project.type}
               </span>
             )}
             {featured && project.status && (

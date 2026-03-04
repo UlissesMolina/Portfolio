@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 
 const GITHUB_USER = 'UlissesMolina';
-const COMMITS_PER_PAGE = 5;
+const ALL_REPOS = [
+  'personal-portflio',
+  'Trackr',
+  'Tiger-Scheduler-Course-Auto-Register-Tool',
+  'FinanceDashBoard',
+  'Enterprise',
+];
+const COMMITS_PER_REPO = 3;
+const MAX_DISPLAY = 6;
 
 const LANGUAGE_COLORS_BY_THEME = {
   coral: [
@@ -23,9 +31,18 @@ const LANGUAGE_COLORS_BY_THEME = {
   ],
 };
 
-function truncateMessage(msg, maxLen = 40) {
+// Short display names for repo labels
+const REPO_LABELS = {
+  'personal-portflio': 'portfolio',
+  'Trackr': 'trackr',
+  'Tiger-Scheduler-Course-Auto-Register-Tool': 'tiger-scheduler',
+  'FinanceDashBoard': 'clarity-finance',
+  'Enterprise': 'enterprise-api',
+};
+
+function truncateMessage(msg, maxLen = 38) {
   if (!msg || msg.length <= maxLen) return msg || '';
-  return msg.slice(0, maxLen).trim() + '...';
+  return msg.slice(0, maxLen).trim() + '…';
 }
 
 function formatLogDate(date) {
@@ -38,138 +55,72 @@ function formatLogDate(date) {
   return `${y}-${m}-${d} ${h}:${min}`;
 }
 
+async function fetchRepoCommits(repo) {
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_USER}/${repo}/commits?per_page=${COMMITS_PER_REPO}`;
+    const res = await fetch(url, { headers: { Accept: 'application/vnd.github.v3+json' } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    return data.map((c) => ({
+      repo,
+      repoLabel: REPO_LABELS[repo] ?? repo,
+      message: c.commit?.message?.split('\n')[0] || '',
+      date: c.commit?.author?.date ? new Date(c.commit.author.date) : null,
+      url: c.html_url,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export default function RecentCommitsCard({ theme = 'coral', roundedClass = 'rounded-xl', cardTier = 'tertiary' }) {
   const languageColors = LANGUAGE_COLORS_BY_THEME[theme] ?? LANGUAGE_COLORS_BY_THEME.coral;
   const [commits, setCommits] = useState([]);
-  const [languages, setLanguages] = useState([]); // { name, percentage, color }
-  const [hoveredLang, setHoveredLang] = useState(null); // for tooltip
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [repoUrl, setRepoUrl] = useState(`https://github.com/${GITHUB_USER}`);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchCommits() {
+    async function fetchAll() {
       setLoading(true);
       setError(null);
-      let lastError = null;
-
       try {
-        const reposToTry = ['personal-portflio', 'Portfolio', 'Tiger-Scheduler-Course-Auto-Register-Tool'];
-        let list = [];
-        let repo = reposToTry[0];
-
-        for (const repoName of reposToTry) {
-          const url = `https://api.github.com/repos/${GITHUB_USER}/${repoName}/commits?per_page=${COMMITS_PER_PAGE}`;
-          const res = await fetch(url, { headers: { Accept: 'application/vnd.github.v3+json' } });
-          if (!res.ok) {
-            const status = res.status;
-            let msg = `GitHub ${status}`;
-            try {
-              const body = await res.json();
-              if (body?.message) msg = body.message;
-              if (status === 403 && (body?.message || '').toLowerCase().includes('rate')) {
-                lastError = 'GitHub rate limit exceeded. Try again in an hour or use a token.';
-              } else {
-                lastError = msg;
-              }
-            } catch (_) {
-              lastError = msg;
-            }
-            continue;
-          }
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            list = data;
-            repo = repoName;
-            setRepoUrl(`https://github.com/${GITHUB_USER}/${repo}/commits`);
-            lastError = null;
-            break;
-          }
+        const results = await Promise.all(ALL_REPOS.map(fetchRepoCommits));
+        if (cancelled) return;
+        const all = results
+          .flat()
+          .filter((c) => c.date)
+          .sort((a, b) => b.date - a.date)
+          .slice(0, MAX_DISPLAY);
+        if (all.length === 0) {
+          setError("Couldn't load commits. Check back later.");
+        } else {
+          setCommits(all);
         }
-
-        if (cancelled) {
-          setLoading(false);
-          return;
-        }
-
-        if (list.length === 0) {
-          setCommits([]);
-          setError(lastError || "Couldn't load commits. Check repo name or try again later.");
-          setLoading(false);
-          return;
-        }
-
-        const baseList = list.slice(0, COMMITS_PER_PAGE);
-        const withStats = await Promise.all(
-          baseList.map(async (c) => {
-            const author = c.commit?.author?.name || c.author?.login || 'Unknown';
-            const message = c.commit?.message?.split('\n')[0] || '';
-            const dateStr = c.commit?.author?.date || c.commit?.committer?.date || '';
-            const date = dateStr ? new Date(dateStr) : null;
-            let additions = null;
-            let deletions = null;
-            try {
-              const detailRes = await fetch(
-                `https://api.github.com/repos/${GITHUB_USER}/${repo}/commits/${c.sha}`,
-                { headers: { Accept: 'application/vnd.github.v3+json' } }
-              );
-              if (detailRes.ok) {
-                const detail = await detailRes.json();
-                additions = detail.stats?.additions ?? null;
-                deletions = detail.stats?.deletions ?? null;
-              }
-            } catch (_) {}
-            return {
-              author,
-              message,
-              date,
-              additions,
-              deletions,
-              url: c.html_url,
-            };
-          })
-        );
-
-        if (!cancelled) setCommits(withStats);
-
-        try {
-          const langRes = await fetch(
-            `https://api.github.com/repos/${GITHUB_USER}/${repo}/languages`,
-            { headers: { Accept: 'application/vnd.github.v3+json' } }
-          );
-          if (!cancelled && langRes.ok) {
-            const langData = await langRes.json();
-            const total = Object.values(langData).reduce((a, b) => a + b, 0);
-            if (total > 0) {
-              const entries = Object.entries(langData)
-                .map(([name, bytes]) => ({
-                  name,
-                  percentage: Math.round((bytes / total) * 100),
-                }))
-                .sort((a, b) => b.percentage - a.percentage);
-              setLanguages(entries);
-            }
-          }
-        } catch (_) {}
       } catch (err) {
-        if (!cancelled) {
-          setError(err.message || 'Failed to load commits');
-          setCommits([]);
-        }
+        if (!cancelled) setError(err.message || 'Failed to load commits');
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
 
-    fetchCommits();
+    fetchAll();
     return () => { cancelled = true; };
   }, []);
 
   const padX = cardTier === 'tertiary' ? 'px-3' : 'px-4';
   const messageColor = 'text-ink-muted';
   const linkColor = 'text-ink-muted hover:text-accent';
+
+  // Build a simple repo activity bar: count commits per repo from displayed list
+  const repoCounts = commits.reduce((acc, c) => {
+    acc[c.repoLabel] = (acc[c.repoLabel] ?? 0) + 1;
+    return acc;
+  }, {});
+  const repoEntries = Object.entries(repoCounts).sort((a, b) => b[1] - a[1]);
+  const totalCommits = commits.length;
 
   return (
     <div
@@ -195,17 +146,15 @@ export default function RecentCommitsCard({ theme = 'coral', roundedClass = 'rou
               href={commit.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block py-0.5 rounded transition-colors hover:bg-surface-border/50"
+              className="flex items-baseline gap-2 py-0.5 rounded transition-colors hover:bg-surface-border/50"
             >
-              <span className="text-ink-dim">
+              <span className="text-ink-dim shrink-0">
                 [{formatLogDate(commit.date)}]
               </span>
-              {' '}
-              <span className={messageColor}>{truncateMessage(commit.message)}</span>
-              {'     '}
-              <span className="text-emerald-500/90">+{commit.additions ?? '—'}</span>
-              <span className="text-slate-500"> / </span>
-              <span className="text-rose-500/90">-{commit.deletions ?? '—'}</span>
+              <span className="text-[10px] shrink-0 border border-accent/30 bg-accent/10 text-accent px-1.5 rounded">
+                {commit.repoLabel}
+              </span>
+              <span className={`${messageColor} truncate`}>{truncateMessage(commit.message)}</span>
             </a>
           ))
         )}
@@ -217,42 +166,43 @@ export default function RecentCommitsCard({ theme = 'coral', roundedClass = 'rou
 
       <div className={`${padX} pb-3 pt-1 border-t border-surface-border`}>
         <a
-          href={repoUrl}
+          href={`https://github.com/${GITHUB_USER}`}
           target="_blank"
           rel="noopener noreferrer"
           className={`inline-flex items-center gap-1.5 text-xs ${linkColor} transition-colors`}
         >
-          View on GitHub
+          View all repos
           <FaExternalLinkAlt size={10} />
         </a>
-        <div className="mt-2 relative">
-          <div className="flex h-1.5 w-full overflow-hidden rounded-full">
-            {languages.length > 0 ? (
-              languages.map((lang, i) => (
+        {repoEntries.length > 0 && (
+          <div className="mt-2 relative">
+            <div className="flex h-1.5 w-full overflow-hidden rounded-full">
+              {repoEntries.map(([label, count], i) => (
                 <div
-                  key={lang.name}
-                  className="min-h-full transition-colors hover:opacity-100 cursor-default"
+                  key={label}
+                  className="min-h-full transition-opacity hover:opacity-100 cursor-default"
+                  title={`${label}: ${count} commit${count !== 1 ? 's' : ''}`}
                   style={{
-                    width: `${lang.percentage}%`,
+                    width: `${(count / totalCommits) * 100}%`,
                     backgroundColor: languageColors[i % languageColors.length],
                     opacity: 0.85,
                   }}
-                  onMouseEnter={() => setHoveredLang(lang)}
-                  onMouseLeave={() => setHoveredLang(null)}
                 />
-              ))
-            ) : (
-              <div className="h-full w-full rounded-full bg-surface-border" />
-            )}
-          </div>
-          {hoveredLang && (
-            <div
-              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 text-xs font-medium whitespace-nowrap rounded z-20 bg-surface-card text-ink border border-surface-border"
-            >
-              {hoveredLang.name} {hoveredLang.percentage}%
+              ))}
             </div>
-          )}
-        </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5">
+              {repoEntries.map(([label, count], i) => (
+                <span key={label} className="flex items-center gap-1 text-[10px] text-ink-dim">
+                  <span
+                    className="inline-block w-2 h-2 rounded-full"
+                    style={{ backgroundColor: languageColors[i % languageColors.length] }}
+                  />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

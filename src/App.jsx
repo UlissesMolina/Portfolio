@@ -1,10 +1,12 @@
 import './App.css'
 import { useEffect, useRef, useState } from 'react';
+import { FaEnvelope, FaGithub, FaLinkedin, FaFileAlt } from 'react-icons/fa';
 import NavBar from './components/NavBar';
 import Terminal from './components/Terminal';
 import ProjectCard from './components/ProjectCard';
 import RecentCommitsCard from './components/RecentCommitsCard';
 import ParticleNetwork from './components/ParticleNetwork';
+
 
 const GITHUB_USER = 'UlissesMolina';
 const THEME_OPTIONS = ['coral', 'matrix', 'dracula', 'frost'];
@@ -25,6 +27,7 @@ function App() {
   const [commitsThisWeek, setCommitsThisWeek] = useState(null);
   const [expandedExpIndex, setExpandedExpIndex] = useState(null);
   const [activeSection, setActiveSection] = useState('');
+  const [visibleSections, setVisibleSections] = useState(new Set());
   const [loadingBarActive, setLoadingBarActive] = useState(false);
   const [theme, setTheme] = useState(() => {
     try {
@@ -40,11 +43,24 @@ function App() {
       sessionStorage.setItem('portfolio-theme', newTheme);
     } catch {}
   };
+  const [toast, setToast] = useState(null);
+  const toastTimerRef = useRef(null);
   const [konamiMessage, setKonamiMessage] = useState(null);
   const [terminalOverlayOpen, setTerminalOverlayOpen] = useState(false);
   const [terminalOverlayClosing, setTerminalOverlayClosing] = useState(false);
   const [heroCardAnimated, setHeroCardAnimated] = useState(false);
   const terminalCloseTimeoutRef = useRef(null);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2000);
+  };
+
+  const handleCopyEmail = (e) => {
+    e.preventDefault();
+    navigator.clipboard.writeText('umolina2005@gmail.com').then(() => showToast('✓ Email copied'));
+  };
 
   const closeTerminalOverlay = () => {
     if (terminalOverlayClosing) return;
@@ -121,6 +137,7 @@ function App() {
   useEffect(() => {
     return () => {
       if (terminalCloseTimeoutRef.current) clearTimeout(terminalCloseTimeoutRef.current);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     };
   }, []);
 
@@ -166,8 +183,10 @@ function App() {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          entry.target.classList.add('animate-fade-in');
-          entry.target.classList.remove('opacity-0');
+          setVisibleSections(prev => {
+            if (prev.has(entry.target.id)) return prev;
+            return new Set([...prev, entry.target.id]);
+          });
           if (entry.target.id === 'experience') {
             entry.target.classList.add('timeline-ready');
           }
@@ -229,6 +248,7 @@ function App() {
       demoUrl: 'https://usetrackr.netlify.app/',
       media: null,
       featured: true,
+      type: 'Web App',
       snippet: `const { data } = useQuery({
   queryKey: ['jobs', status],
   queryFn: () => api.getJobs(status),
@@ -252,6 +272,7 @@ const { mutate } = useMutation({
       demoUrl: null,
       media: { type: 'video', url: '/script.mp4' },
       featured: false,
+      type: 'Automation',
       snippet: `from selenium import webdriver
 
 while True:
@@ -270,6 +291,7 @@ while True:
       demoUrl: 'https://clarityfi.netlify.app/',
       media: null,
       featured: false,
+      type: 'Web App',
       snippet: `function Dashboard() {
   const [data, setData] = useState<FinanceData | null>(null);
   useEffect(() => fetchFinanceData().then(setData), []);
@@ -279,6 +301,35 @@ while True:
       <Charts data={data} />
     </div>
   ); }`,
+    },
+    {
+      title: 'Enterprise Expense Management API',
+      description: 'Layered Spring Boot REST API with JWT auth and role-based access control via Spring Security. Features transactional approval workflows, audit logging, and PostgreSQL persistence. Integration-tested with Testcontainers and documented with OpenAPI/Swagger. Containerized with Docker and Docker Compose.',
+      tags: ['Java', 'Spring Boot', 'PostgreSQL', 'Docker', 'JWT', 'Testcontainers'],
+      githubUrl: 'https://github.com/UlissesMolina/Enterprise',
+      demoUrl: null,
+      media: null,
+      featured: true,
+      type: 'REST API',
+      snippet: `@RestController
+@RequestMapping("/api/expenses")
+class ExpenseController {
+
+  @PostMapping("/submit")
+  public ResponseEntity<Expense> submit(
+      @Valid @RequestBody ExpenseRequest req) {
+    return ResponseEntity.ok(
+      service.submit(req));
+  }
+
+  @PostMapping("/{id}/approve")
+  @PreAuthorize("hasRole('MANAGER')")
+  public ResponseEntity<Expense> approve(
+      @PathVariable Long id) {
+    return ResponseEntity.ok(
+      service.approve(id));
+  }
+}`,
     },
   ];
 
@@ -351,12 +402,13 @@ while True:
           <section
             id="experience"
             ref={el => sectionRefs.current[0] = el}
-            className="flex flex-col items-start w-full opacity-0"
+            className="flex flex-col items-start w-full"
           >
             <div className={`font-mono text-sm sm:text-base mb-2 text-ink`}>
               <div className="flex items-baseline gap-2">
                 <span className="text-accent select-none">$</span>
                 <span>work</span>
+                <span className="cursor-blink text-accent">▋</span>
               </div>
               <div className={`pl-4 mt-0.5 text-ink-muted`}>→ work</div>
             </div>
@@ -367,7 +419,11 @@ while True:
                 const hasMore = exp.bullets.length > 1;
                 const isLast = index === experiences.length - 1;
                 return (
-                  <div key={index} className="group/exp relative flex items-stretch gap-5 pb-10 last:pb-0">
+                  <div
+                    key={index}
+                    className={`group/exp relative flex items-stretch gap-5 pb-10 last:pb-0 ${visibleSections.has('experience') ? 'stagger-child' : 'opacity-0'}`}
+                    style={{ animationDelay: visibleSections.has('experience') ? `${index * 120}ms` : undefined }}
+                  >
                     <div className="relative flex w-4 flex-shrink-0 flex-col items-center pt-1">
                       <div
                         className={`relative z-[2] h-4 w-4 rounded-full border-2 animate-dot-pulse transition-all duration-200 group-hover/exp:scale-125 bg-accent border-accent/60 ${index === 0 ? 'timeline-dot--first' : 'timeline-dot timeline-dot--animated'}`}
@@ -453,66 +509,127 @@ while True:
           <section
             id="projects"
             ref={el => sectionRefs.current[1] = el}
-            className="flex flex-col items-start w-full opacity-0"
+            className="flex flex-col items-start w-full"
           >
             <div className={`font-mono text-sm sm:text-base mb-2 text-ink`}>
               <div className="flex items-baseline gap-2">
                 <span className="text-accent select-none">$</span>
                 <span>cat projects/</span>
+                <span className="cursor-blink text-accent">▋</span>
               </div>
               <div className={`pl-4 mt-0.5 text-ink-muted`}>→ projects</div>
             </div>
             <div className={`w-full border-t mb-8 border-surface-border`} style={{ maxWidth: '32rem' }} />
             <div className="grid gap-5 w-full max-w-4xl grid-cols-1 sm:grid-cols-2">
               {projects.map((project, index) => (
-                <ProjectCard
+                <div
                   key={index}
-                  project={project}
-                  roundedClass="rounded-lg"
-                  featured={project.featured}
-                />
+                  className={`${project.featured ? 'sm:col-span-2' : ''} ${visibleSections.has('projects') ? 'stagger-child' : 'opacity-0'}`}
+                  style={{ animationDelay: visibleSections.has('projects') ? `${index * 80}ms` : undefined }}
+                >
+                  <ProjectCard
+                    project={project}
+                    roundedClass="rounded-lg"
+                    featured={project.featured}
+                  />
+                </div>
               ))}
             </div>
           </section>
           <section
             id="contributions"
             ref={el => sectionRefs.current[2] = el}
-            className="flex flex-col items-start w-full opacity-0"
+            className="flex flex-col items-start w-full"
           >
             <div className={`font-mono text-sm sm:text-base mb-2 text-ink`}>
               <div className="flex items-baseline gap-2">
                 <span className="text-accent select-none">$</span>
                 <span>tail -f activity.log</span>
+                <span className="cursor-blink text-accent">▋</span>
               </div>
               <div className={`pl-4 mt-0.5 text-ink-muted`}>→ activity</div>
             </div>
             <div className={`w-full border-t mb-8 border-surface-border`} style={{ maxWidth: '32rem' }} />
-            <div className="w-full max-w-xl">
+            <div
+              className={`w-full max-w-xl ${visibleSections.has('contributions') ? 'stagger-child' : 'opacity-0'}`}
+            >
               <RecentCommitsCard theme={theme} roundedClass="rounded-lg" />
             </div>
           </section>
         </main>
         <footer
           id="contact"
-          className="w-full py-16 mt-8 flex flex-col items-center gap-10 border-t transition-colors scroll-mt-[5rem] border-surface-border"
+          className="w-full py-16 mt-8 scroll-mt-[5rem]"
         >
-          <div className="w-full max-w-md font-mono text-sm sm:text-base text-ink-muted">
-            <div className="flex items-baseline gap-2 mb-2">
-              <span className="text-accent select-none">&gt;</span>
-              <span className="text-ink">contact</span>
+          <div className="w-full max-w-md mx-auto">
+            <div className="font-mono text-sm sm:text-base mb-2 text-ink">
+              <div className="flex items-baseline gap-2">
+                <span className="text-accent select-none">&gt;</span>
+                <span>contact</span>
+                <span className="cursor-blink text-accent">▋</span>
+              </div>
+              <div className="pl-4 mt-0.5 text-ink-muted">→ contact</div>
             </div>
-            <div className="pl-4 space-y-1.5">
-              <p>Email: <a href="mailto:umolina2005@gmail.com" className="font-medium hover:underline text-accent hover:text-accent-light">umolina2005@gmail.com</a></p>
-              <p>GitHub: <a href="https://github.com/UlissesMolina" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline text-accent hover:text-accent-light">github.com/UlissesMolina</a></p>
-              <p>LinkedIn: <a href="https://www.linkedin.com/in/ulissesmolina" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline text-accent hover:text-accent-light">linkedin.com/in/ulissesmolina</a></p>
-              <p>Resume: <a href="/uliResume.pdf" download="uliResume.pdf" className="font-medium hover:underline text-accent hover:text-accent-light">Resume (PDF)</a></p>
+            <div className="w-full border-t mb-8 border-surface-border" style={{ maxWidth: '32rem' }} />
+            <div className="bg-surface-bg border border-white/[0.03] rounded-lg p-6">
+              <p className="text-sm text-ink-muted mb-6 leading-relaxed">
+                Open to Summer 2026 SWE internships — full-stack, backend, or automation.
+                <br />Feel free to reach out through any of the channels below.
+              </p>
+              <div className="flex flex-col gap-2">
+                <a
+                  href="mailto:umolina2005@gmail.com"
+                  onClick={handleCopyEmail}
+                  title="Click to copy"
+                  className="group flex items-center gap-3 px-3 py-2.5 rounded-md border border-transparent hover:border-accent/20 hover:bg-surface-border/30 transition-all duration-200"
+                >
+                  <FaEnvelope size={14} className="text-ink-muted group-hover:text-accent shrink-0 transition-colors" />
+                  <span className="text-sm text-ink-muted group-hover:text-ink transition-colors">umolina2005@gmail.com</span>
+                  <span className="ml-auto text-[10px] font-mono text-ink-dim opacity-0 group-hover:opacity-100 transition-opacity">click to copy</span>
+                </a>
+                <a
+                  href="https://github.com/UlissesMolina"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 px-3 py-2.5 rounded-md border border-transparent hover:border-accent/20 hover:bg-surface-border/30 transition-all duration-200"
+                >
+                  <FaGithub size={14} className="text-ink-muted group-hover:text-accent shrink-0 transition-colors" />
+                  <span className="text-sm text-ink-muted group-hover:text-ink transition-colors">github.com/UlissesMolina</span>
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/ulissesmolina"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 px-3 py-2.5 rounded-md border border-transparent hover:border-accent/20 hover:bg-surface-border/30 transition-all duration-200"
+                >
+                  <FaLinkedin size={14} className="text-ink-muted group-hover:text-accent shrink-0 transition-colors" />
+                  <span className="text-sm text-ink-muted group-hover:text-ink transition-colors">linkedin.com/in/ulissesmolina</span>
+                </a>
+                <a
+                  href="/uliResume.pdf"
+                  download="uliResume.pdf"
+                  className="group flex items-center gap-3 px-3 py-2.5 rounded-md border border-transparent hover:border-accent/20 hover:bg-surface-border/30 transition-all duration-200"
+                >
+                  <FaFileAlt size={14} className="text-ink-muted group-hover:text-accent shrink-0 transition-colors" />
+                  <span className="text-sm text-ink-muted group-hover:text-ink transition-colors">Resume (PDF)</span>
+                  <span className="ml-auto text-[10px] font-mono text-ink-dim opacity-0 group-hover:opacity-100 transition-opacity">download</span>
+                </a>
+              </div>
+            </div>
+            <div className="mt-8 flex justify-center">
+              <span className="text-[10px] font-mono tabular-nums transition-colors text-ink-dim" title="How long you've been on this page">
+                Time on page: {formatSessionTime(time.getTime() - sessionStartRef.current)} · {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
+              </span>
             </div>
           </div>
-          <span className="text-[10px] font-mono tabular-nums transition-colors text-ink-dim" title="How long you've been on this page">
-            Time on page: {formatSessionTime(time.getTime() - sessionStartRef.current)} · {time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true })}
-          </span>
         </footer>
       </div>
+
+      {toast && (
+        <div className="toast-enter fixed bottom-6 right-6 z-50 font-mono text-xs px-3 py-2 rounded border bg-surface-card border-accent/40 text-accent shadow-lg pointer-events-none">
+          {toast}
+        </div>
+      )}
 
       {terminalOverlayOpen && (
         <div
